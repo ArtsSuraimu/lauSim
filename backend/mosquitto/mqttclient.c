@@ -77,9 +77,11 @@ static int getKaL(
 void mqtt_cb(struct mosquitto * mosq, void * pData, const struct mosquitto_message * msg);
 
 int mqtt_init(
-	mqtt_user_backend_t* pData
+	void* uData,
+	void* instance
 ){
 	int ret;
+	mqtt_user_backend_t* pData = (mqtt_user_backend_t*) uData;
 	mosquitto_lib_init();
 	mosq = mosquitto_new (getClid(), 1, pData);
 	if(!mosq){
@@ -99,7 +101,6 @@ int mqtt_init(
 	{
 		return -1;
 	}
-
 
 	return 0;
 }
@@ -123,7 +124,6 @@ int mqtt_subscribe(
 	return -2;
 }
 
-
 void mqtt_cb(
 	struct mosquitto * mosq,
 	void * pData,
@@ -138,5 +138,4 @@ void mqtt_cb(
 	memcpy(data->msg, msg->payload, len);
 	*(data->msglen) = len;
 	data->callback(data->key, data->msg, len);
-
 }

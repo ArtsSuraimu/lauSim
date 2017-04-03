@@ -20,10 +20,13 @@ typedef struct tag_mosquitto_backend{
 	void* msg;
 	int* msglen;
 	int bufLen;
+	FP_SEND send;
+	FP_RECV recv;
 }mqtt_user_backend_t;
 
 int mqtt_init(
-	mqtt_user_backend_t* pData
+	void* uData,
+	void* instance
 );
 
 int mqtt_subscribe(

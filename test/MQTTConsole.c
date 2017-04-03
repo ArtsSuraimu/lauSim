@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include "lauSim_com_intf.h"
 #include "MQTTConsole.h"
 #include "mqttclient.h"
 
@@ -52,7 +53,7 @@ int main(
 	myData.msglen = &msgLen;
 	myData.msg = buf;
 
-	mqtt_init(&myData);
+	mqtt_init(&myData, NULL);
 	mqtt_subscribe(1, topic);
 
 	while(1)
