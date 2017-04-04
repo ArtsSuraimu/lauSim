@@ -26,12 +26,13 @@ typedef void (*FP_KILL) (int delay, int pid);
 typedef void (*FP_KILLALL) (int delay, char* pname);
 
 struct tag_actor_intf{
-	int version;
-	actor_features_t feature;
-	FP_FAIL fail;
-	FP_REBOOT reboot;
-	FP_KILL kill;
-	FP_KILLALL killall;
+	int 				version;
+	void*				pData;
+	actor_features_t	feature;
+	FP_FAIL 			fail;
+	FP_REBOOT 			reboot;
+	FP_KILL 			kill;
+	FP_KILLALL 			killall;
 };
 
 #endif /* INC_INCLUDE_LAUSIM_ACT_INTF_H_ */
