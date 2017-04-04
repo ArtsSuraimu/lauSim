@@ -9,6 +9,9 @@
 #ifndef INC_INCLUDE_LAUSIM_ACT_INTF_H_
 #define INC_INCLUDE_LAUSIM_ACT_INTF_H_
 
+#define ACTOR_INTF_VER 1
+
+typedef struct tag_actor_intf actor_t;
 
 typedef enum tag_actor_features{
 	SHUTDOWN = 0b1,
@@ -22,5 +25,13 @@ typedef void (*FP_REBOOT) (int delay);
 typedef void (*FP_KILL) (int delay, int pid);
 typedef void (*FP_KILLALL) (int delay, char* pname);
 
+struct tag_actor_intf{
+	int version;
+	actor_features_t feature;
+	FP_FAIL fail;
+	FP_REBOOT reboot;
+	FP_KILL kill;
+	FP_KILLALL killall;
+};
 
 #endif /* INC_INCLUDE_LAUSIM_ACT_INTF_H_ */
