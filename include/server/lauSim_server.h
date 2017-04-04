@@ -9,6 +9,8 @@
 #ifndef INC_LAUSIM_SERVER_H_
 #define INC_LAUSIM_SERVER_H_
 
+#include "lauSim_algo_intf.h"
+#include "lauSim_com_intf.h"
 
 
 #endif /* INC_LAUSIM_SERVER_H_ */
