@@ -9,12 +9,23 @@
 #ifndef INC_BACKEND_PRIMITIVE_ALGO_ALGO_RANDOM_H_
 #define INC_BACKEND_PRIMITIVE_ALGO_ALGO_RANDOM_H_
 
-
+#include "pcg/pcg_basic.h"
 #include "lauSim_algo_intf.h"
+
+#define MAX_NODES_SIZE 100
+#define MAX_CONCURRENT_FAIL 2
+
+typedef struct tag_str_list str_list_t;
+
+typedef struct tag_str_list{
+	char* data;
+	str_list_t* next;
+};
 
 typedef struct tag_data_algo_rand{
 	pcg32_random_t* rng;
-	char** spare_node_list;
+	str_list_t* spare_node_head;
+	str_list_t* spare_node_tail;
 	int num_spares;
 }algo_randdata_t;
 
