@@ -42,46 +42,22 @@ char* getClid(
 #endif
 }
 
-static
-char* getHostname(
-	void
-	){
-#ifdef HOSTNAME
-	return HOSTNAME;
-#else
-	return "localhost";
-#endif
-}
 
-static
-int getPort(
-	void
-	){
-#ifdef PORT
-	return PORT;
-#else
-	return 1883;
-#endif
-}
-
-static int getKaL(
-	void){
-#ifdef KEEPALIVE
-	return KEEPALIVE;
-#else
-	return 60;
-#endif
-}
 
 
 void mqtt_cb(struct mosquitto * mosq, void * pData, const struct mosquitto_message * msg);
 
 int mqtt_init(
-	void* uData,
-	void* instance
+	char* 			client_id,
+	char* 			address,
+	int				port,
+	int				keep_alive,
+	com_backend_t* 	com
 ){
 	int ret;
-	mqtt_user_backend_t* pData = (mqtt_user_backend_t*) uData;
+
+	mqtt_user_backend_t* pData = (mqtt_user_backend_t*) malloc (sizeof(mqtt_user_backend_t));
+
 	mosquitto_lib_init();
 	mosq = mosquitto_new (getClid(), 1, pData);
 	if(!mosq){
@@ -89,7 +65,19 @@ int mqtt_init(
 	}
 	mosquitto_message_callback_set(mosq, mqtt_cb);
 
-	ret = mosquitto_connect(mosq, getHostname(), getPort(), getKaL());
+	if(!address){
+		address = "localhost";
+	}
+
+	if(!port){
+		port = 1883;
+	}
+
+	if(!keep_alive){
+		keep_alive = 60;
+	}
+
+	ret = mosquitto_connect(mosq, address, port, keep_alive);
 	if(ret!=MOSQ_ERR_SUCCESS)
 	{
 		return -1;
@@ -101,6 +89,13 @@ int mqtt_init(
 	{
 		return -1;
 	}
+
+	com->pData = pData;
+	com->isConnected = 1;
+	com->addr = address;
+	com->port = port;
+	com->recv = mqtt_recv;
+	com->send = mqtt_publish;
 
 	return 0;
 }
@@ -124,6 +119,8 @@ int mqtt_subscribe(
 	return -2;
 }
 
+
+
 void mqtt_cb(
 	struct mosquitto * mosq,
 	void * pData,
@@ -138,4 +135,23 @@ void mqtt_cb(
 	memcpy(data->msg, msg->payload, len);
 	*(data->msglen) = len;
 	data->callback(data->key, data->msg, len);
+}
+
+
+int mqtt_recv(
+	char* channel,
+	char* buffer,
+	int*  length
+	){
+	assert(0);
+	return 0;
+}
+
+int mqtt_publish(
+	char* channel,
+	char* buffer,
+	int   length
+	){
+	assert(0);
+	return 0;
 }

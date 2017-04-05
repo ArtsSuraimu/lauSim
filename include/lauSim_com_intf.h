@@ -29,7 +29,7 @@ typedef int (*FP_RECV) (
 typedef void (*FP_COM_INIT) (
 		com_type_t	type,
 		char* 		addr,
-		int			port,
+		int			port
 		);
 
 enum tag_com_type{
@@ -43,7 +43,7 @@ enum tag_com_type{
 
 struct tag_com{
 	int 		version;		/* Com Interface Version */
-	void* 		pData;			/* Struct for cOm backend */
+	void* 		pData;			/* Struct for com backend */
 	int			isConnected;	/* Connection static */
 	char*		addr;			/* Addres of other side */
 	int			port;			/* Port */

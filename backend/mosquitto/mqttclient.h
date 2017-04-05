@@ -25,8 +25,11 @@ typedef struct tag_mosquitto_backend{
 }mqtt_user_backend_t;
 
 int mqtt_init(
-	void* uData,
-	void* instance
+	char* 			client_id,
+	char* 			address,
+	int				port,
+	int				keep_alive,
+	com_backend_t* 	com
 );
 
 int mqtt_subscribe(
@@ -35,6 +38,17 @@ int mqtt_subscribe(
 	);
 
 
+int mqtt_recv(
+	char* channel,
+	char* buffer,
+	int*  length
+	);
+
+int mqtt_publish(
+	char* channel,
+	char* buffer,
+	int   length
+	);
 
 
 #endif /* INC_BACKEND_MOSQUITTO_MQTTCLIENT_C_ */
