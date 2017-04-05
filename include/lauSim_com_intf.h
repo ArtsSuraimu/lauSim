@@ -12,6 +12,7 @@
 #define COM_INTF_VER 1
 
 typedef struct tag_com com_backend_t;
+typedef enum tag_com_type com_type_t;
 
 typedef int (*FP_SEND) (
 		char* 	channel,
@@ -25,28 +26,37 @@ typedef int (*FP_RECV) (
 		int* 	length
 		);
 
-typedef int (*FP_COM_INIT) (
-		void* 	pData,
-		void* 	instance
+typedef void (*FP_COM_INIT) (
+		com_type_t	type,
+		char* 		addr,
+		int			port,
 		);
 
-typedef enum tag_com_type{
+enum tag_com_type{
 	COM_MQTT 	= 1,
 	COM_TCP 	= 2,
 	COM_UDP 	= 3,
 	COM_SOCKET 	= 4,
 	COM_PIPE 	= 5,
 	COM_FILE 	= 6
-}com_type_t;
-
-struct tag_com{
-	int 		version;
-	void* 		pData;
-	com_type_t 	type;
-	FP_COM_INIT init;
-	FP_SEND 	send;
-	FP_RECV 	recv;
 };
 
+struct tag_com{
+	int 		version;		/* Com Interface Version */
+	void* 		pData;			/* Struct for cOm backend */
+	int			isConnected;	/* Connection static */
+	char*		addr;			/* Addres of other side */
+	int			port;			/* Port */
+	com_type_t 	type;			/* Connector type */
+
+	FP_SEND 	send;			/* Default Synchronous Send function */
+	FP_RECV 	recv;			/* Default Syncrhonous Recv function */
+};
+
+com_backend_t* init_com(
+	com_type_t type,
+	char* 		addr,
+	int 		port
+);
 
 #endif /* INC_LAUSIM_COM_INTF_H_ */

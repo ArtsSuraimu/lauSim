@@ -24,7 +24,25 @@
 
 #include "server/lauSim_server.h"
 
-
+static
+void lausim_srv_sig_handler(
+	int sig
+){
+	switch (sig)
+	{
+		case SIGCHLD:
+			break;
+		case SIGHUP:
+			syslog(LOG_NOTICE, "Reveived SIGHUP, resetting...");
+			break;
+		case SIGTERM:
+			syslog(LOG_NOTICE, "Received SIGTERM, exiting...");
+			closelog();
+			exit(0);
+		default:
+			break;
+	}
+}
 
 static
 void proc_backend(
@@ -46,9 +64,9 @@ void proc_backend(
 	if (setsid() < 0)
 		exit(1);
 
-	//TODO: signal handler */
-	signal(SIGCHLD, SIG_IGN);
-	signal(SIGHUP, SIG_IGN);
+	signal(SIGCHLD, lausim_srv_sig_handler);
+	signal(SIGHUP, lausim_srv_sig_handler);
+	signal(SIGTERM, lausim_srv_sig_handler);
 
 	/* Detach */
 	pid = fork();
@@ -83,11 +101,24 @@ int main(
 
 	proc_backend();
 
+	/*
+	 * TODO:
+	 * Seperate Threads for Simulating Node Failure and
+	 * Monitoring Spare Nodes.
+	 */
+
     while (1)
     {
     	syslog(LOG_NOTICE, "lauSim started.");
     	sleep (100);
-        //TODO: Insert daemon code here.
+
+    	/*
+    	 * TODO
+    	 * 1. Determine Running Nodes
+    	 * 2. Connect to Algo, get fail list
+    	 * 3. send messages to COM Backend
+    	 * 4. sleep.
+    	 */
     }
 
     syslog(LOG_NOTICE, "lauSim terminated.");
