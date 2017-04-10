@@ -93,6 +93,7 @@ void proc_backend(
 
 }
 
+#if 0
 
 int main(
 	int argc,
@@ -127,3 +128,5 @@ int main(
     return EXIT_SUCCESS;
 
 }
+
+#endif

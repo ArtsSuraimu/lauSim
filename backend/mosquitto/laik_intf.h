@@ -15,11 +15,11 @@
 #define MAX_LAIK_MSG_SIZE 2048
 
 typedef int (*LAIK_EXT_FAIL) (LaikExtMsg* list);
-typedef int (*LAIK_EXT_CLEANUP) (void* pData);
+typedef int (*LAIK_EXT_CLEANUP) ();
 
 void init_ext_com(
-	LAIK_EXT_FAIL* fp_backend,
-	LAIK_EXT_CLEANUP* cleanup,
+	LAIK_EXT_FAIL fp_backend,
+	LAIK_EXT_CLEANUP cleanup,
 	char* addr,
 	int port,
 	int keepalive,

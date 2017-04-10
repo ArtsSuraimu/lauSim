@@ -18,7 +18,7 @@ typedef int (*FP_SEND) (
 		char* 	channel,
 		char* 	buffer,
 		int		length,
-		com_backend_t backend
+		com_backend_t* backend
 );
 
 typedef int (*FP_RECV) (

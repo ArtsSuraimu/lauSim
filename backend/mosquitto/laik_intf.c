@@ -18,8 +18,10 @@
 
 static
 com_backend_t com;
-
+static
 LAIK_EXT_FAIL laik_fp;
+static
+LAIK_EXT_CLEANUP laik_cleanup = NULL;
 
 void msg_cb (
 	const void* msg,
@@ -27,8 +29,8 @@ void msg_cb (
 );
 
 void init_ext_com(
-	LAIK_EXT_FAIL* 		fp_backend,
-	LAIK_EXT_CLEANUP* 	cleanup,
+	LAIK_EXT_FAIL 		fp_backend,
+	LAIK_EXT_CLEANUP 	cleanup,
 	char* 				addr,
 	int 				port,
 	int					keepalive,
@@ -41,6 +43,11 @@ void init_ext_com(
 	char* topic[1] = {NODE_STATUS_TOPIC};
 	FP_MSG_CB callbacks[1] = {msg_cb};
 
+
+	assert(fp_backend);
+	laik_fp = fp_backend;
+	laik_cleanup = cleanup;
+
 	memset(&com, 0x0, sizeof(com_backend_t));
 
 	/* according to posix 1.0 */
@@ -51,7 +58,7 @@ void init_ext_com(
 
 	/* generate a new client id */
 	clientid = (char*) malloc (strlen(hostname) + sizeof("LAIK_") + 1);
-	sprintf(clientid, "LAIK_%s", hostname);
+	sprintf(clientid, "LAIKpart_%s", hostname);
 
 	/* get a new mqtt instance */
 	ret = mqtt_init(clientid, addr, port, keepalive, &com);
@@ -85,5 +92,8 @@ void msg_cb (
 void cleanup_ext_com(
 	void
 ){
+	if(laik_cleanup){
+		laik_cleanup();
+	}
 	mqtt_cleanup(&com);
 }

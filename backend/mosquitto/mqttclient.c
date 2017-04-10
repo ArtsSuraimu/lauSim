@@ -33,6 +33,7 @@ int mqtt_init(
 	com_backend_t* 	com
 ){
 	int ret;
+	int i;
 	struct mosquitto *mosq;
 	mqtt_cb_list_t** list;
 	mqtt_msg_handler_data_t* pData;
@@ -46,7 +47,11 @@ int mqtt_init(
 
 	/* create handler list */
 	list = (mqtt_cb_list_t**) malloc
-			(sizeof(mqtt_cb_list_t) * MAX_SUBSCRIBED_TOPIC);
+			(sizeof(mqtt_cb_list_t*) * MAX_SUBSCRIBED_TOPIC);
+
+	for(i=0; i<MAX_SUBSCRIBED_TOPIC; i++){
+		list[i] = (mqtt_cb_list_t*) malloc (sizeof(mqtt_cb_list_t));
+	}
 	pData = (mqtt_msg_handler_data_t*) malloc
 			(sizeof(mqtt_msg_handler_data_t));
 	pData->count = 0;
@@ -65,7 +70,7 @@ int mqtt_init(
 	mosquitto_message_callback_set(mosq, msg_handler);
 
 	/* set last will to current hostname */
-	mosquitto_will_set(mosq, LAST_WILL_TOPIC, strlen(hostname), hostname, 0, 0);
+	ret = mosquitto_will_set(mosq, LAST_WILL_TOPIC, strlen(hostname), hostname, 0, 0);
 
 	/* set connection data */
 	if(!address){
@@ -120,7 +125,7 @@ int mqtt_subscribe(
 
 	int i = 0, j = 0;
 	int ret;
-	struct mosquito* mosq;
+	struct mosquitto* mosq;
 	mqtt_msg_handler_data_t* pData;
 	mqtt_cb_list_t** callbacks;
 	char* temp;
@@ -163,7 +168,7 @@ void msg_handler(
 	void * pData,
 	const struct mosquitto_message* msg
 ){
-	int len, i;
+	int i;
 	mqtt_msg_handler_data_t* hnd;
 	mqtt_cb_list_t** callbacks;
 	mqtt_cb_list_t* current;
@@ -205,6 +210,9 @@ void mqtt_cleanup(
 	/* clean callbacks */
 	for(i=0; i<pData->count; i++){
 		free(callbacks[i]->topic);
+	}
+	for(i=0; i<MAX_SUBSCRIBED_TOPIC; i++){
+		free(callbacks[i]);
 	}
 
 	free(callbacks);
