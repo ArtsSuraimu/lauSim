@@ -10,19 +10,25 @@
 #define INC_BACKEND_MOSQUITTO_MQTTCLIENT_C_
 
 #include "lauSim_com_intf.h"
+#include <mosquitto.h>
 
+#define LAST_WILL_TOPIC "last_will"
 
-typedef void (*FP_MQTT_CB) (char* topic, void* msg, int msglen);
+#define MAX_SUBSCRIBED_TOPIC 32
+
+typedef void (*FP_MSG_CB) (const void* msg, int msglen);
+typedef void (*FP_MQTT_CB) (struct mosquitto* mosq, void* pData, const struct mosquitto_message* msg);
+
 
 typedef struct tag_mosquitto_backend{
-	FP_MQTT_CB callback;
-	char* key;
-	void* msg;
-	int* msglen;
-	int bufLen;
-	FP_SEND send;
-	FP_RECV recv;
-}mqtt_user_backend_t;
+	char* topic;
+	FP_MSG_CB callback;
+}mqtt_cb_list_t;
+
+typedef struct tag_msg_handler_data{
+	mqtt_cb_list_t** callbacks;
+	int count;;
+}mqtt_msg_handler_data_t;
 
 int mqtt_init(
 	char* 			client_id,
@@ -33,22 +39,22 @@ int mqtt_init(
 );
 
 int mqtt_subscribe(
+	com_backend_t* com,
 	int num_topics,
-	char ** topics
-	);
+	char ** topics,
+	FP_MSG_CB* usr_callback
+);
 
-
-int mqtt_recv(
-	char* channel,
-	char* buffer,
-	int*  length
-	);
+void mqtt_cleanup(
+	com_backend_t* com
+);
 
 int mqtt_publish(
-	char* channel,
-	char* buffer,
-	int   length
-	);
+	const char* topic,
+	const char* buffer,
+	int   length,
+	com_backend_t* com
+);
 
 
 #endif /* INC_BACKEND_MOSQUITTO_MQTTCLIENT_C_ */

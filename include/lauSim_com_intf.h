@@ -17,14 +17,16 @@ typedef enum tag_com_type com_type_t;
 typedef int (*FP_SEND) (
 		char* 	channel,
 		char* 	buffer,
-		int		length
-		);
+		int		length,
+		com_backend_t backend
+);
 
 typedef int (*FP_RECV) (
 		char*	channel,
 		char*	buffer,
-		int* 	length
-		);
+		int* 	length,
+		com_backend_t* backend
+);
 
 typedef void (*FP_COM_INIT) (
 		com_type_t	type,
@@ -48,6 +50,8 @@ struct tag_com{
 	char*		addr;			/* Addres of other side */
 	int			port;			/* Port */
 	com_type_t 	type;			/* Connector type */
+
+	void*		com_entity;
 
 	FP_SEND 	send;			/* Default Synchronous Send function */
 	FP_RECV 	recv;			/* Default Syncrhonous Recv function */

@@ -9,43 +9,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <mosquitto.h>
+#include <assert.h>
+#include <unistd.h>
 
 #include "mqttclient.h"
 #include "config.h"
 
 static
-
-struct mosquitto *mosq = NULL;
-
-static inline
-int min(
-	int a,
-	int b
-	){
-	if(a>b){
-		return b;
-	}else
-	{
-		return a;
-	}
-}
+void msg_handler(
+	struct mosquitto * mosq,
+	void * pData,
+	const struct mosquitto_message * msg
+);
 
 static
-char* getClid(
-	void
-	){
-#ifdef CLIENTID
-	return CLIENTID;
-#else
-	return "foo";
-#endif
-}
-
-
-
-
-void mqtt_cb(struct mosquitto * mosq, void * pData, const struct mosquitto_message * msg);
+char hostname[64];
 
 int mqtt_init(
 	char* 			client_id,
@@ -55,16 +33,41 @@ int mqtt_init(
 	com_backend_t* 	com
 ){
 	int ret;
+	struct mosquitto *mosq;
+	mqtt_cb_list_t** list;
+	mqtt_msg_handler_data_t* pData;
 
-	mqtt_user_backend_t* pData = (mqtt_user_backend_t*) malloc (sizeof(mqtt_user_backend_t));
+	assert(com);
 
+	gethostname(hostname, 64);
+	if(hostname[64] != '\0'){
+		hostname[64] = '\0';
+	}
+
+	/* create handler list */
+	list = (mqtt_cb_list_t**) malloc
+			(sizeof(mqtt_cb_list_t) * MAX_SUBSCRIBED_TOPIC);
+	pData = (mqtt_msg_handler_data_t*) malloc
+			(sizeof(mqtt_msg_handler_data_t));
+	pData->count = 0;
+	pData->callbacks = list;
+
+	/* Initialize Library */
 	mosquitto_lib_init();
-	mosq = mosquitto_new (getClid(), 1, pData);
+
+	/* create a new instance */
+	mosq = mosquitto_new (client_id, 1, pData);
 	if(!mosq){
 		return -1;
 	}
-	mosquitto_message_callback_set(mosq, mqtt_cb);
 
+	/* set message handler callback */
+	mosquitto_message_callback_set(mosq, msg_handler);
+
+	/* set last will to current hostname */
+	mosquitto_will_set(mosq, LAST_WILL_TOPIC, strlen(hostname), hostname, 0, 0);
+
+	/* set connection data */
 	if(!address){
 		address = "localhost";
 	}
@@ -77,81 +80,157 @@ int mqtt_init(
 		keep_alive = 60;
 	}
 
+	// TODO: Set UsrName und Password
+
+	/* connect to broker */
 	ret = mosquitto_connect(mosq, address, port, keep_alive);
 	if(ret!=MOSQ_ERR_SUCCESS)
 	{
 		return -1;
 	}
-
+	/* set reconnection parameters */
 	mosquitto_reconnect_delay_set(mosq, 1, 30, 0);
+
+	/* start mosquitto client thread */
 	ret = mosquitto_loop_start(mosq);
 	if(ret!=MOSQ_ERR_SUCCESS)
 	{
 		return -1;
 	}
 
+	/* generate the communication handle */
+	com->type = COM_MQTT;
 	com->pData = pData;
 	com->isConnected = 1;
 	com->addr = address;
 	com->port = port;
-	com->recv = mqtt_recv;
+	com->recv = NULL;
 	com->send = mqtt_publish;
+	com->com_entity = mosq;
 
 	return 0;
 }
 
 int mqtt_subscribe(
+	com_backend_t* com,
 	int num_topics,
-	char ** topics
+	char ** topics,
+	FP_MSG_CB* usr_callback
 ){
-	if(mosq){
-		int i = 0;
-		int ret;
-		for(; i<num_topics; i++)
+
+	int i = 0, j = 0;
+	int ret;
+	struct mosquito* mosq;
+	mqtt_msg_handler_data_t* pData;
+	mqtt_cb_list_t** callbacks;
+	char* temp;
+
+	assert(com->type == COM_MQTT);
+	assert(usr_callback);
+	assert(topics);
+
+	mosq = (struct mosquitto*) com->com_entity;
+	pData = com->pData;
+	callbacks = pData->callbacks;
+
+	for(; i<num_topics; i++)
+	{
+		/* subscribe topic */
+		ret = mosquitto_subscribe(mosq, NULL, topics[i], 2);
+		if(ret != MOSQ_ERR_SUCCESS)
 		{
-			ret = mosquitto_subscribe(mosq, NULL, topics[i], 2);
-			if(ret != MOSQ_ERR_SUCCESS)
-			{
-				return -1;
-			}
+			return -1;
 		}
+
+		/* copy topic name */
+		temp = (char*) malloc (strlen(topics[i]) + 1);
+		memcpy(temp, topics[i], strlen(topics[i] + 1));
+
+		/* save user callback */
+		j = pData->count + i;
+		callbacks[j]->topic = temp;
+		callbacks[j]->callback = usr_callback[i];
+		pData->count += 1;
 	}
-	return -2;
+
+	return 0;
 }
 
 
-
-void mqtt_cb(
+static
+void msg_handler(
 	struct mosquitto * mosq,
 	void * pData,
 	const struct mosquitto_message* msg
 ){
-	int len;
+	int len, i;
+	mqtt_msg_handler_data_t* hnd;
+	mqtt_cb_list_t** callbacks;
+	mqtt_cb_list_t* current;
 
-	mqtt_user_backend_t* data = pData;
-	data->key = msg->topic;
+	hnd = (mqtt_msg_handler_data_t*) pData;
+	callbacks = hnd->callbacks;
 
-	len = min(data->bufLen, msg->payloadlen);
-	memcpy(data->msg, msg->payload, len);
-	*(data->msglen) = len;
-	data->callback(data->key, data->msg, len);
+	/* find out the corresponding topic callback and handle it */
+	for(i=0; i<hnd->count; i++)
+	{
+		current = callbacks[i];
+		if(strcmp(msg->topic, current->topic))
+		{
+			current->callback(msg->payload, msg->payloadlen);
+			break;
+		}
+	}
 }
 
+void mqtt_cleanup(
+	com_backend_t* com
+){
+	mqtt_msg_handler_data_t* pData;
+	mqtt_cb_list_t** callbacks;
+	int i;
 
-int mqtt_recv(
-	char* channel,
-	char* buffer,
-	int*  length
-	){
-	assert(0);
-	return 0;
+	assert(com);
+	assert(com->type == COM_MQTT);
+
+	pData = com->pData;
+	callbacks = pData->callbacks;
+
+	/* close connections */
+	mosquitto_loop_stop((struct mosquitto*) com->com_entity, 1);
+	mosquitto_disconnect((struct mosquitto*) com->com_entity);
+	mosquitto_destroy((struct mosquitto*) com->com_entity);
+	mosquitto_lib_cleanup();
+
+	/* clean callbacks */
+	for(i=0; i<pData->count; i++){
+		free(callbacks[i]->topic);
+	}
+
+	free(callbacks);
+	free(pData);
+
 }
+
 
 int mqtt_publish(
-	char* channel,
-	char* buffer,
-	int   length
-	){
-	assert(0);
+	const char* topic,
+	const char* buffer,
+	int   length,
+	com_backend_t* com
+){
+
+	struct mosquitto* mosq;
+	int ret;
+
+	assert(com->type == COM_MQTT);
+	mosq = (struct mosquitto*) com->com_entity;
+
+	ret = mosquitto_publish(mosq, NULL, topic, length, buffer, 0, 0);
+
+	if(ret != MOSQ_ERR_SUCCESS){
+		return -1;
+	}
+
 	return 0;
 }

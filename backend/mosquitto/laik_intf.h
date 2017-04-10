@@ -9,11 +9,12 @@
 #ifndef INC_BACKEND_MOSQUITTO_LAIK_INTF_H_
 #define INC_BACKEND_MOSQUITTO_LAIK_INTF_H_
 
-#include "laik_ext.pb-c.h"
+#include "proto/laik_ext.pb-c.h"
 
+#define NODE_STATUS_TOPIC "envelope/status"
+#define MAX_LAIK_MSG_SIZE 2048
 
-
-typedef int (*LAIK_EXT_FAIL) (LaikExtMsg** list, void* pData);
+typedef int (*LAIK_EXT_FAIL) (LaikExtMsg* list);
 typedef int (*LAIK_EXT_CLEANUP) (void* pData);
 
 void init_ext_com(
@@ -27,7 +28,7 @@ void init_ext_com(
 );
 
 void cleanup_ext_com(
-	void* pData
+	void
 );
 
 
