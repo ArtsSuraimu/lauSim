@@ -31,7 +31,9 @@ void cleanup_ext_com(
 	void
 );
 
-
+int isAlive(
+	int timeout
+);
 
 
 #endif /* INC_BACKEND_MOSQUITTO_LAIK_INTF_H_ */

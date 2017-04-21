@@ -28,6 +28,10 @@ typedef int (*FP_RECV) (
 		com_backend_t* backend
 );
 
+typedef int (*FP_PING) (
+		int timeout
+);
+
 typedef void (*FP_COM_INIT) (
 		com_type_t	type,
 		char* 		addr,
@@ -43,6 +47,7 @@ enum tag_com_type{
 	COM_FILE 	= 6
 };
 
+
 struct tag_com{
 	int 		version;		/* Com Interface Version */
 	void* 		pData;			/* Struct for com backend */
@@ -55,6 +60,7 @@ struct tag_com{
 
 	FP_SEND 	send;			/* Default Synchronous Send function */
 	FP_RECV 	recv;			/* Default Syncrhonous Recv function */
+	FP_PING		ping;
 };
 
 com_backend_t* init_com(

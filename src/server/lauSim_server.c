@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <syslog.h>
+#include <argp.h>
 
 
 
@@ -23,6 +24,68 @@
 #endif
 
 #include "server/lauSim_server.h"
+
+static
+int parse_opt(
+	int key,
+	char* arg,
+	struct argp_state *state
+);
+
+
+static
+char doc[] = "This is LauSim.";
+
+
+static
+struct argp_options cmdlineOpts[] = {
+		{"verbose", 'v', 0, 0, "Produce verbose output"},
+		{"console", 'c', 0, 0, "Run in console mode"},
+		{"daemon",  'd,',0, 0, "Run in daemon mode"}
+};
+
+static
+char args_doc[] = "-c/-d (-v)";
+
+static
+int parse_opt(
+	int key,
+	char* arg,
+	struct argp_state *state
+){
+	LAUSIM_CONFIG local_config = state->input;
+
+	switch (key){
+		case 'v':
+			local_config->debug = 1;
+			break;
+		case 'c':
+			if(local_config->type == ST_UNDEFINED){
+				local_config->type = ST_CONSOLE;
+			}
+			break;
+		case 'd':
+			if(local_config->type == ST_UNDEFINED){
+				local_config->type = ST_DAEMON;
+			}
+			break;
+		case ARGP_KEY_ARG:
+			if(state->arg_num >= ARGNUM)
+			{
+				argp_usage(state);
+			}
+			break;
+		case ARGP_KEY_END:
+			if(state->arg_num <= 1){
+				argp_usage(state);
+			}
+			break;
+
+		default:
+			return ARGP_ERR_UNKNOWN;
+	}
+}
+
 
 static
 void lausim_srv_sig_handler(
@@ -93,12 +156,28 @@ void proc_backend(
 
 }
 
-#if 0
+int procCmdLine (
+	int argc,
+	char** argv
+){
+
+}
+
 
 int main(
 	int argc,
 	char** argv
 ){
+
+	struct argp argp = {cmdlineOpts, parse_opt, args_doc, doc};
+	LAUSIM_CONFIG* local_config;
+
+	local_config = (LAUSIM_CONFIG*) sizeof(LAUSIM_CONFIG);
+	memset(local_config, 0x0, sizeof(LAUSIM_CONFIG));
+
+	local_config->type = ST_UNDEFINED;
+
+	argp_parse(&argp, argc, argv, 0, 0, local_config);
 
 	proc_backend();
 
@@ -125,8 +204,10 @@ int main(
     syslog(LOG_NOTICE, "lauSim terminated.");
     closelog();
 
+    free(local_config);
+
     return EXIT_SUCCESS;
 
 }
 
-#endif
+
