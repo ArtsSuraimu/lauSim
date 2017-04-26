@@ -17,7 +17,7 @@
 
 typedef struct tag_str_list str_list_t;
 
-typedef struct tag_str_list{
+struct tag_str_list{
 	char* data;
 	str_list_t* next;
 };
@@ -28,6 +28,10 @@ typedef struct tag_data_algo_rand{
 	str_list_t* spare_node_tail;
 	int num_spares;
 }algo_randdata_t;
+
+algo_t* init_random(
+	void
+);
 
 void random_get_failed(
 	algo_t*	algo,

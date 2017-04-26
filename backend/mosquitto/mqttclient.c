@@ -13,7 +13,6 @@
 #include <unistd.h>
 
 #include "mqttclient.h"
-#include "config.h"
 
 static
 void msg_handler(

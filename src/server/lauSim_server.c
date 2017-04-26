@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <syslog.h>
 #include <argp.h>
+#include <assert.h>
 
 
 
@@ -24,6 +25,7 @@
 #endif
 
 #include "server/lauSim_server.h"
+#include "../backend/primitive_algo/algo_random.h"
 
 static
 int parse_opt(
@@ -38,10 +40,11 @@ char doc[] = "This is LauSim.";
 
 
 static
-struct argp_options cmdlineOpts[] = {
+struct argp_option cmdlineOpts[] = {
 		{"verbose", 'v', 0, 0, "Produce verbose output"},
 		{"console", 'c', 0, 0, "Run in console mode"},
-		{"daemon",  'd,',0, 0, "Run in daemon mode"}
+		{"daemon",  'd',0, 0, "Run in daemon mode"},
+		{0}
 };
 
 static
@@ -53,7 +56,7 @@ int parse_opt(
 	char* arg,
 	struct argp_state *state
 ){
-	LAUSIM_CONFIG local_config = state->input;
+	LAUSIM_CONFIG *local_config = state->input;
 
 	switch (key){
 		case 'v':
@@ -84,6 +87,8 @@ int parse_opt(
 		default:
 			return ARGP_ERR_UNKNOWN;
 	}
+
+	return 0;
 }
 
 
@@ -156,12 +161,6 @@ void proc_backend(
 
 }
 
-int procCmdLine (
-	int argc,
-	char** argv
-){
-
-}
 
 
 int main(
@@ -170,39 +169,72 @@ int main(
 ){
 
 	struct argp argp = {cmdlineOpts, parse_opt, args_doc, doc};
+	char * nodelist[4] = {
+			"node00",
+			"node01",
+			"node02",
+			"node03"
+	};
+	char** failed_node_list;
+	int num_failed;
+
 	LAUSIM_CONFIG* local_config;
 
-	local_config = (LAUSIM_CONFIG*) sizeof(LAUSIM_CONFIG);
+	local_config = (LAUSIM_CONFIG*) malloc( sizeof(LAUSIM_CONFIG));
 	memset(local_config, 0x0, sizeof(LAUSIM_CONFIG));
 
 	local_config->type = ST_UNDEFINED;
 
-	argp_parse(&argp, argc, argv, 0, 0, local_config);
+	if(argc != 1){
+		argp_parse(&argp, argc, argv, 0, 0, local_config);
+	}else{
+		local_config->type = ST_CONSOLE;
+	}
 
-	proc_backend();
+	if(local_config->type == ST_CONSOLE)
+	{
+		local_config->algo = init_random();
 
-	/*
-	 * TODO:
-	 * Seperate Threads for Simulating Node Failure and
-	 * Monitoring Spare Nodes.
-	 */
+		while (1){
+			random_get_failed(local_config->algo, nodelist, 4, failed_node_list, &num_failed);
 
-    while (1)
-    {
-    	syslog(LOG_NOTICE, "lauSim started.");
-    	sleep (100);
+			for(int i=0; i<num_failed; i++){
+				printf("Failed Node: %s\n", failed_node_list[i]);
+			}
+			num_failed = 0;
+			free(failed_node_list);
 
-    	/*
-    	 * TODO
-    	 * 1. Determine Running Nodes
-    	 * 2. Connect to Algo, get fail list
-    	 * 3. send messages to COM Backend
-    	 * 4. sleep.
-    	 */
-    }
+			sleep(1000);
+		}
+	}
+	else
+	{
+		assert (0);
+		proc_backend();
 
-    syslog(LOG_NOTICE, "lauSim terminated.");
-    closelog();
+		/*
+		 * TODO:
+		 * Seperate Threads for Simulating Node Failure and
+		 * Monitoring Spare Nodes.
+		 */
+
+		while (1)
+		{
+			syslog(LOG_NOTICE, "lauSim started.");
+			sleep (100);
+
+			/*
+			 * TODO
+			 * 1. Determine Running Nodes
+			 * 2. Connect to Algo, get fail list
+			 * 3. send messages to COM Backend
+			 * 4. sleep.
+			 */
+		}
+
+		syslog(LOG_NOTICE, "lauSim terminated.");
+		closelog();
+	}
 
     free(local_config);
 

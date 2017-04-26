@@ -24,6 +24,7 @@ typedef enum tag_option{
 
 typedef struct tag_lausim_config{
 	SERVER_TYPE type;
+	algo_t* algo;
 	int debug;
 }LAUSIM_CONFIG;
 
