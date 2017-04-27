@@ -37,12 +37,12 @@ void random_get_failed(
 	algo_t*	algo,
 	char** 	node_list,
 	int		num_nodes,
-	char**	failed_node_list,
+	char***	failed_node_list,
 	int*	num_failed);
 
 void random_get_spare(
 	algo_t*	algo,
-	char**	spare_node_list,
+	char***	spare_node_list,
 	int*	num_spare);
 
 void random_register_node(

@@ -31,7 +31,7 @@ int isAnyInt(
 
 static
 void copyStrArray(
-	const char** from,
+	char** from,
 	char** to,
 	int num
 ){
@@ -183,7 +183,7 @@ void random_get_failed(
 	algo_t*	algo,
 	char** 	node_list,			/* List of all Nodes */
 	int		num_nodes,
-	char**	failed_node_list,	/* List of Failed Nodes */
+	char***	failed_node_list,	/* List of Failed Nodes */
 	int*	num_failed)
 {
 	int cnt_failed;
@@ -199,7 +199,7 @@ void random_get_failed(
 	cnt_failed = pcg32_boundedrand_r(pData->rng, MAX_CONCURRENT_FAIL + 1);
 	if(cnt_failed == 0)
 	{
-		failed_node_list = NULL;
+		*failed_node_list = NULL;
 		*num_failed = 0;
 		return;
 	}
@@ -208,13 +208,13 @@ void random_get_failed(
 		cnt_failed = num_nodes;
 	}
 
-	failed_node_list = (char**) malloc (cnt_failed*sizeof(char*));
-	assert(failed_node_list);
+	*failed_node_list = (char**) malloc (cnt_failed*sizeof(char*));
+	assert(*failed_node_list);
 
 	// all nodes failed
 	if(cnt_failed == num_nodes){
 
-		copyStrArray(node_list, failed_node_list, cnt_failed);
+		copyStrArray(node_list, *failed_node_list, cnt_failed);
 		*num_failed = cnt_failed;
 		return;
 	}
@@ -236,9 +236,9 @@ void random_get_failed(
 		}
 
 		// copy the name of node to failed node list
-		failed_node_list[i] = (char*) malloc (
+		(*failed_node_list)[i] = (char*) malloc (
 				(strlen(node_list[i_failed]) +1 ) * sizeof(char));
-		strcpy(failed_node_list[i], node_list[i_failed]);
+		strcpy((*failed_node_list)[i], node_list[i_failed]);
 
 		// add nodeindex to history
 		history[j] = i_failed;
@@ -272,7 +272,7 @@ void random_register_node(
 
 void random_get_spare(
 	algo_t*	algo,
-	char**	spare_node_list,
+	char***	spare_node_list,
 	int*	num_spare)
 {
 	algo_randdata_t* pData;
@@ -291,8 +291,8 @@ void random_get_spare(
 			str_list_t* p;
 
 			//create a spare node list
-			spare_node_list = (char**) malloc (cnt_nodes * sizeof(char*));
-			assert(spare_node_list);
+			*spare_node_list = (char**) malloc (cnt_nodes * sizeof(char*));
+			assert(*spare_node_list);
 			*num_spare = 0;
 
 			//take the first n spare nodes from our list
@@ -304,8 +304,8 @@ void random_get_spare(
 					pData->spare_node_tail = p->next;
 				}
 				//copy it
-				spare_node_list[i] = (char*) malloc((strlen(p->data)+1)*sizeof(char));
-				strcpy(spare_node_list[i], p->data);
+				(*spare_node_list)[i] = (char*) malloc((strlen(p->data)+1)*sizeof(char));
+				strcpy((*spare_node_list)[i], p->data);
 				//clean it up
 				free(p->data);
 				free(p);
@@ -313,14 +313,16 @@ void random_get_spare(
 				(*num_spare)++;
 				(pData->num_spares)--;
 			}
-		}
+		}else{
 		//assume no spare node
 		*spare_node_list = NULL;
 		*num_spare = 0;
-	}
+		}
+	}else{
 
-	spare_node_list = NULL;
+	*spare_node_list = NULL;
 	*num_spare = 0;
+	}
 }
 
 void cleanup_random(

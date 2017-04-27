@@ -18,14 +18,20 @@
 #include <argp.h>
 #include <assert.h>
 
-
-
 #ifdef DEBUG
 #include <debug.h>
 #endif
 
 #include "server/lauSim_server.h"
+#include "mqttclient.h"
 #include "../backend/primitive_algo/algo_random.h"
+#include "proto/laik_ext.pb-c.h"
+
+
+#define NODE_STATUS_TOPIC "envelope/status"
+
+
+
 
 static
 int parse_opt(
@@ -180,6 +186,12 @@ int main(
 
 	LAUSIM_CONFIG* local_config;
 
+	com_backend_t com;
+		LaikExtMsg msg = LAIK_EXT_MSG__INIT;
+	void* buf;
+	int len;
+
+
 	local_config = (LAUSIM_CONFIG*) malloc( sizeof(LAUSIM_CONFIG));
 	memset(local_config, 0x0, sizeof(LAUSIM_CONFIG));
 
@@ -191,20 +203,39 @@ int main(
 		local_config->type = ST_CONSOLE;
 	}
 
+	mqtt_init("Foo", "localhost", 1883, 60, &com);
+
+
 	if(local_config->type == ST_CONSOLE)
 	{
 		local_config->algo = init_random();
 
 		while (1){
-			random_get_failed(local_config->algo, nodelist, 4, failed_node_list, &num_failed);
+			local_config->algo->failed(local_config->algo, nodelist, 4, &failed_node_list, &num_failed);
 
+			msg.n_failing_nodes = num_failed;
+			msg.failing_nodes = failed_node_list;
+			msg.n_spare_nodes = 0;
+
+			len = laik_ext_msg__get_packed_size(&msg);
+			buf = malloc(len);
+			laik_ext_msg__pack(&msg, buf);
+			com.send(NODE_STATUS_TOPIC, buf, len, &com);
+			free(buf);
+
+			//debug;
 			for(int i=0; i<num_failed; i++){
 				printf("Failed Node: %s\n", failed_node_list[i]);
+
+				free(failed_node_list[i]);
 			}
+			//TODO: Failed Nodes aus dem Liste streichen!!!
+			//TODO: Publish Node List!!
+
 			num_failed = 0;
 			free(failed_node_list);
 
-			sleep(1000);
+			sleep(1);
 		}
 	}
 	else
@@ -236,6 +267,7 @@ int main(
 		closelog();
 	}
 
+	mqtt_cleanup(&com);
     free(local_config);
 
     return EXIT_SUCCESS;
