@@ -181,7 +181,7 @@ int main(
 			"node02",
 			"node03"
 	};
-	int num_nodes = 4;
+	int num_nodes = sizeof(nodelist) / sizeof(char *);
 	char** failed_node_list;
 	int num_failed;
 
@@ -192,6 +192,7 @@ int main(
 	void* buf;
 	int len;
 
+	printf("There are %d nodes\n", num_nodes);
 	// calloc returns zeroed memory
 	local_config = (LAUSIM_CONFIG*) calloc(1, sizeof(LAUSIM_CONFIG));
 
