@@ -10,9 +10,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include <sys/time.h>
 
 #include "algo_random.h"
+#include "utils.h"
 
 static
 int isAnyInt(
@@ -103,7 +105,6 @@ str_list_t* insertStr (
 	return e;
 }
 
-
 #if 0
 static
 int removeStr (
@@ -147,7 +148,8 @@ int removeStr (
 		}
 	}
 	return ret;
-}spare_node_list = NULL;
+}
+spare_node_list = NULL;
 *num_spare = 0;
 #endif
 
@@ -186,11 +188,13 @@ void random_get_failed(
 	char***	failed_node_list,	/* List of Failed Nodes */
 	int*	num_failed)
 {
+
 	int cnt_failed;
 	int i_failed;
 	int i, j=0;
 	int* history;
 	algo_randdata_t* pData;
+
 
 	assert(algo);
 	pData = (algo_randdata_t*) algo->pData;
@@ -212,12 +216,12 @@ void random_get_failed(
 	assert(*failed_node_list);
 
 	// all nodes failed
-	if(cnt_failed == num_nodes){
+	/*if(cnt_failed == num_nodes){
 
 		copyStrArray(node_list, *failed_node_list, cnt_failed);
 		*num_failed = cnt_failed;
 		return;
-	}
+	}*/
 
 	// some nodes failed
 	history = (int*) malloc (cnt_failed*sizeof(int));
@@ -229,7 +233,7 @@ void random_get_failed(
 
 		//get index of failed node
 		i_failed = pcg32_boundedrand_r(pData->rng, num_nodes);
-		//ensure this occured only once in this run
+		//ensure this occures only once in this run
 		while(isAnyInt(i_failed, cnt_failed, history))
 		{
 			i_failed = pcg32_boundedrand_r(pData->rng, num_nodes);
@@ -244,7 +248,6 @@ void random_get_failed(
 		history[j] = i_failed;
 		j++;
 	}
-
 	*num_failed = cnt_failed;
 }
 

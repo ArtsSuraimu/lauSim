@@ -107,7 +107,7 @@ void lausim_srv_sig_handler(
 		case SIGCHLD:
 			break;
 		case SIGHUP:
-			syslog(LOG_NOTICE, "Reveived SIGHUP, resetting...");
+			syslog(LOG_NOTICE, "Received SIGHUP, resetting...");
 			break;
 		case SIGTERM:
 			syslog(LOG_NOTICE, "Received SIGTERM, exiting...");
@@ -181,6 +181,7 @@ int main(
 			"node02",
 			"node03"
 	};
+	int num_nodes = 4;
 	char** failed_node_list;
 	int num_failed;
 
@@ -191,9 +192,8 @@ int main(
 	void* buf;
 	int len;
 
-
-	local_config = (LAUSIM_CONFIG*) malloc( sizeof(LAUSIM_CONFIG));
-	memset(local_config, 0x0, sizeof(LAUSIM_CONFIG));
+	// calloc returns zeroed memory
+	local_config = (LAUSIM_CONFIG*) calloc(1, sizeof(LAUSIM_CONFIG));
 
 	local_config->type = ST_UNDEFINED;
 
@@ -210,8 +210,8 @@ int main(
 	{
 		local_config->algo = init_random();
 
-		while (1){
-			local_config->algo->failed(local_config->algo, nodelist, 4, &failed_node_list, &num_failed);
+		while (num_nodes > 0){
+			local_config->algo->failed(local_config->algo, nodelist, num_nodes, &failed_node_list, &num_failed);
 
 			msg.n_failing_nodes = num_failed;
 			msg.failing_nodes = failed_node_list;
@@ -223,20 +223,31 @@ int main(
 			com.send(NODE_STATUS_TOPIC, buf, len, &com);
 			free(buf);
 
-			//debug;
-			for(int i=0; i<num_failed; i++){
-				printf("Failed Node: %s\n", failed_node_list[i]);
-
-				free(failed_node_list[i]);
-			}
-			//TODO: Failed Nodes aus dem Liste streichen!!!
 			//TODO: Publish Node List!!
+			// TODO: dirty needs cleanup
+			for (int i = num_nodes - 1; i >= 0; i--) {
+				for (int j = num_failed - 1; j >= 0; j--) {
+					if (strcmp(nodelist[i], failed_node_list[j]) == 0) {
+						memmove(&nodelist[i], &nodelist[i + 1], (num_nodes - 1 - i) * sizeof(char *));
+						// debug
+						printf("Failed Node: %s\n", failed_node_list[j]);
+						free(failed_node_list[j]);
+						memmove(&failed_node_list[j],
+							   &failed_node_list[j + 1],
+							   (num_failed - 1 - j) * sizeof(char*));
+
+						num_failed--;
+						num_nodes--;
+					}
+				}
+			}
 
 			num_failed = 0;
 			free(failed_node_list);
 
 			sleep(1);
 		}
+		printf("No Nodes left!\n");
 	}
 	else
 	{
@@ -273,5 +284,3 @@ int main(
     return EXIT_SUCCESS;
 
 }
-
-
