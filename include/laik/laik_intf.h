@@ -9,6 +9,10 @@
 #ifndef INC_BACKEND_MOSQUITTO_LAIK_INTF_H_
 #define INC_BACKEND_MOSQUITTO_LAIK_INTF_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "proto/laik_ext.pb-c.h"
 
 #define NODE_STATUS_TOPIC "envelope/status"
@@ -35,5 +39,8 @@ int isAlive(
 	int timeout
 );
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* INC_BACKEND_MOSQUITTO_LAIK_INTF_H_ */

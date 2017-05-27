@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <pthread.h>
 
-#include "laik_intf.h"
+#include "../../include/mosquitto/laik_intf.h"
 #include "mqttclient.h"
 #include "lauSim_com_intf.h"
 
