@@ -2,13 +2,14 @@
 #define FAILURE_MANAGER_H
 
 #include "node.h"
+#include "types.h"
 
 #ifdef __cpluplus
 namespace lauSim {
 extern "C" {
-#endif
+#endif  //__cplusplus
 
-typedef struct {
+typedef struct tag_failure{
     int id;
     char *name;
     char *component;
@@ -16,6 +17,18 @@ typedef struct {
     unsigned severity;
     unsigned char degree; /* currently unused, assume always 100 */
 } failure;
+
+
+/**
+    Graph structure for storing the corresponding node
+    failure transition graph. 
+    A node fail affects all other nodes with a connection 
+    by a specific fault propagation probability. 
+*/
+typedef struct tag_topology{
+    int dimension;
+    rate_t ** propagation_matrix;
+} topology;
 
 typedef struct tag_failure_manager{
 	/**

@@ -14,6 +14,8 @@ extern "C" {
 #endif
 
 typedef struct tag_com{
+
+	int version;
     /**
      *  This methode should notify the backend of node
      *  that a component has failed or degraded

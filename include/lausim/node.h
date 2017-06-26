@@ -1,6 +1,8 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include "types.h"
+
 #ifdef __cpluplus
 namespace lauSim {
 extern "C" {
@@ -12,27 +14,26 @@ typedef enum tag_type{
 	uniform_node = 0,
 	network_switch,
 	pdu
-} node_t;
+} node_type_t;
 
 
 typedef struct tag_component{
     char *name;
     unsigned severity;
-    unsigned char degree;
+    percentage_t degree;
 } component;
 
 typedef struct {
     char *name;
     int id;
-    unsigned type;
+    node_type_t type;
     unsigned num_components;
+    
+    rate_t failure_rate;
+    rate_t recovery_rate;
+
     component *components[];
 } node;
-
-typedef struct tag_distance_graph {
-    int dimension;
-    bool edges;
-} graph;
 
 #ifdef __cpluplus
 }
