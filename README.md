@@ -15,5 +15,8 @@ Leightweight AUtomatic fault Simulator is an application to simulate node-level 
 * Google ProtoBuf (libprotobuf-c)
 * Mosquitto (libmosquitto, for MQTT com Backend)
 
+## Authors
+Clemens Jonischkeit, Dai Yang
+
 ## License
 Apache License, (C)2017 TUM, IfL, LRR
