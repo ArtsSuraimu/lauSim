@@ -8,7 +8,7 @@
 #include <netdb.h>
 #include <csignal>
 
-#include "../include/socket.h"
+#include "socket.h"
 
 using namespace lauSim;
 

@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include "node.h"
-#include "component.h"
 
 #ifdef __cpluplus
 namespace lauSim {
@@ -18,7 +17,7 @@ typedef struct {
      *  param component the name of the component that failed
      *  param severity the severity of the fail (e.g. total fail or just corruptions)
      */
-    int (*notify_fail) (char *node, char *component, char *notice);
+    int (*notify_fail) (char *node, char *component, unsigned severity);
 } com;
 
 #ifdef __cpluplus

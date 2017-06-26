@@ -14,7 +14,7 @@ typedef struct {
 typedef struct {
     char *name;
     unsigned num_components;
-    component *components[];
+    component **components;
 } node;
 
 #ifdef __cpluplus

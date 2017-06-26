@@ -6,7 +6,9 @@ CXXSOURCES = $(wildcard com/**/*.cpp) $(wildcard algo/**.cpp) $(wildcard src/**.
 COBJS = $(patsubst %.c, build/%.o, $(CSOURCES))
 CXXOBJS += $(patsubst %.cpp, build/%.o, $(CXXSOURCES))
 INCL = $(wildcard include/*.h) $(wildcard include/**/*.h)
-CLFAGS = -Wall -Wextra -pedantic -O0 -g
+COMFLAGS = -Wall -Wextra -pedantic -O0 -g
+CFLAGS = $(COMFLAGS) -std=c99
+CXXFLAGS = $(COMFLAGS) -std=c++11
 
 build/lauSim: $(COBJS) $(CXXOBJS)
 #	$(info $$CXXOBJS = [${CXXOBJS}])
@@ -15,11 +17,11 @@ build/lauSim: $(COBJS) $(CXXOBJS)
 
 $(COBJS): build/%.o: %.c $(INCL)
 	@mkdir -p $(@D)
-	$(CC) -Wall -Wextra -pedantic -O0 -g -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(CXXOBJS): build/%.o: %.cpp $(INCL)
 	@mkdir -p $(@D)
-	$(CC) -Wall -Wextra -pedantic -O0 -g -c $< -o $@
+	$(CC) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	rm -rf build/
