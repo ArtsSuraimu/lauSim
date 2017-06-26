@@ -1,3 +1,10 @@
+/*
+ * @Author: C. Jonischkeit
+ * @Date: 2017-06-26 14:20:17 
+ * @Last Modified by: D. Yang
+ * @Last Modified time: 2017-06-26 14:21:24
+ */
+
 #ifndef PLUGIN_H
 #define PLUGIN_H
 

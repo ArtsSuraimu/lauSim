@@ -1,3 +1,9 @@
+/*
+ * @Author: C. Jonischkeit 
+ * @Date: 2017-06-26 14:20:59 
+ * @Last Modified by:   D. Yang 
+ * @Last Modified time: 2017-06-26 14:20:59 
+ */
 #ifndef FAILURE_MANAGER_H
 #define FAILURE_MANAGER_H
 

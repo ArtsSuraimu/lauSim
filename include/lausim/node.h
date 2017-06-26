@@ -1,3 +1,9 @@
+/*
+ * @Author: C. Jonischkeit 
+ * @Date: 2017-06-26 14:20:38 
+ * @Last Modified by:   D. Yang 
+ * @Last Modified time: 2017-06-26 14:20:38 
+ */
 #ifndef NODE_H
 #define NODE_H
 

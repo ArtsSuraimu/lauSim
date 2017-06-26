@@ -1,3 +1,9 @@
+/*
+ * @Author: D. Yang
+ * @Date: 2017-06-26 14:20:29 
+ * @Last Modified by:   D. Yang 
+ * @Last Modified time: 2017-06-26 14:20:29 
+ */
 #ifndef TYPES_H
 #define TYPES_H
 
