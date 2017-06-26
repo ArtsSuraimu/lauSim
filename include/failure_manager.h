@@ -6,7 +6,7 @@
 
 namespace lauSim {
 
-struct failur_config{
+struct failure_config{
     node *node;
     component *component;
     failure_type *type;
