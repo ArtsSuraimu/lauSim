@@ -1,57 +1,28 @@
 /*
  * @Author: D. Yang
  * @Date: 2017-06-26 14:20:29 
- * @Last Modified by:   D. Yang 
- * @Last Modified time: 2017-06-26 14:20:29 
+ * @Last Modified by:   C. Jonischkeit
+ * @Last Modified time: 2017-06-30 13:02:20 
  */
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef LAUSIM_TYPES_H
+#define LAUSIM_TYPES_H
 
 #ifdef __cplusplus
+#include <cstdint>
 namespace lauSim{
 extern "C"{
+#else
+#include <stdint.h>
 #endif  //__cplusplus
 
-typedef struct tag_com com;
-
-typedef int (*init) (int argc, char *argv[]);
-typedef int (*cleanup) ();
-typedef com *(*get_com) ();
-typedef failure_manager *(*get_failure_manager) ();
-
-typedef unsigned char rate_t;
-typedef unsigned char percentage_t;
-
-
-struct tag_com{
-	int version;
-    /**
-     *  This methode should notify the backend of node
-     *  that a component has failed or degraded
-     *  param node the name of the node that failed
-     *  param component the name of the component that failed
-     *  param severity the severity of the fail (e.g. total fail or just corruptions)
-     */
-    int (*notify_fail) (char *node, char *component, char *notice);
-    int (*notify_extern) (char* msg, int* len_msg);
-    int (*isr_injection) (...);  //TODO: Understand This
-};
-
-struct tag_math{
-    int version; 
-    
-    int (*rand_n) ();
-    rate_t (*calc_rate) (rate_t* rates);  //TODO: Understand this
-}
-
-typedef enum tag_loglevel{
+typedef enum tag_log_level{
     LL_None = 0,
     LL_Debug, 
     LL_Info,
     LL_Warning,
     LL_Error,
     LL_Fatal
-}LogLevel;
+}log_level;
 
 #ifndef __cplusplus
 typedef unsigned char bool;

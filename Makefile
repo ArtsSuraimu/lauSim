@@ -1,6 +1,6 @@
 CC = g++
 
-LFLAGS = -lmosquittopp
+LFLAGS = -lmosquittopp -ldl
 # CSOURCES = $(wildcard com/**/*.c)
 CXXSOURCES = $(wildcard com/**/*.cpp) $(wildcard algo/**.cpp) $(wildcard src/**.cpp) $(wildcard srv/**.cpp)
 COBJS = $(patsubst %.c, build/%.o, $(CSOURCES))
@@ -13,7 +13,7 @@ CXXFLAGS = $(COMFLAGS) -std=c++11
 build/lauSim: $(COBJS) $(CXXOBJS)
 #	$(info $$CXXOBJS = [${CXXOBJS}])
 #	$(info $$INCL = [${INCL}])
-	$(CC) -Wall -Wextra -pedantic -O0 -g $(LFLAGS) $(COBJS) $(CXXOBJS) -o build/lauSim
+	$(CC) $(CXXFLAGS) $(LFLAGS) $(COBJS) $(CXXOBJS) -o build/lauSim
 
 $(COBJS): build/%.o: %.c $(INCL)
 	@mkdir -p $(@D)

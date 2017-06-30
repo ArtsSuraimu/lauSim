@@ -1,15 +1,15 @@
 /*
  * @Author: C. Jonischkeit
  * @Date: 2017-06-26 14:20:17 
- * @Last Modified by: D. Yang
- * @Last Modified time: 2017-06-26 14:21:24
+ * @Last Modified by: C. Jonischkeit
+ * @Last Modified time: 2017-06-30 13:02:40
  */
 
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
 #include "com.h"
-#include "failure_manager.h"
+#include "fault_manager.h"
 #include "types.h"
 
 #define PL_INTF_VERSION 1
@@ -19,47 +19,39 @@ namespace lauSim {
 extern "C" {
 #endif
 
-typedef enum tag_plugin_type{
-    PL_Unknown = 0,
-    PL_COM,
-    PL_MATH,
-    PL_FAILURE_MANAGER
-}plugin_type_t;
+#define PL_COM 1
+#define PL_FAULT_MANAGER 2
+#define PL_LOGGER 3
+#define PL_TOPOLOGY 4
+
+#define SET_PL_TYPE(pl,t) = (pl |= t)
+#define HAS_PL_TYPE(pl,t) = (pl & t)
+
+typedef uint64_t plugin_type_t;
+typedef int (*post_init_fun) ();
+typedef int (*cleanup_fun) ();
 
 typedef struct tag_plugin{
     int version;
-    plugin_type_t type;
+    plugin_type_t pl_type;
+    char *name;
 
-    init init_func;
-    cleanup cleanup_func;
-
+    post_init_fun post_init;
+    cleanup_fun cleanup;
+    get_com_fun c;
+    get_fault_manager_fun fm;
 } plugin;
 
-/* cast these structs to plugin, to pseudo inherit from plugin */
-typedef struct tag_com_plugin{
-    plugin hdr;
-    com c;
-} com_plugin;
+typedef struct {
+    int version;
+    int (*register_plugin) (const plugin *);
+    const plugin *(*by_name) (const char *name);
+    const plugin *(*by_type) (plugin_type_t type);
+} plugin_manager_interface;
 
-typedef struct tag_math_plugin{
-    plugin hdr;
-    math m;
-} math_plugin;
-
-typedef struct tag_failure_plugin{
-    plugin hdr;
-    failure_manager fm;
-} failure_manager_plugin;
+typedef int (*init_fun) (const plugin_manager_interface*, int argc, char **argv);
 
 #ifdef __cpluplus
-class plugin{
-    public:
-        
-
-    private: 
-        void* plugin_handles;
-    
-}
 }
 }
 #endif

@@ -1,3 +1,7 @@
+/*
+ * @Author: C. Jonischkeit 
+ * @Date: 2017-06-30 13:01:25
+*/
 
 #ifndef LAUSIM_SOCKET_H
 #define LAUSIM_SOCKET_H

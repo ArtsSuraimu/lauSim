@@ -14,7 +14,10 @@ namespace lauSim{
 extern "C"{
 #endif
 
-void lausim_log(LogLevel l, char * msg, ...);
+/* no variable length function!
+ * please sprintf it your own and hand over the buffer
+ */
+void lausim_log(LogLevel l, char * msg);
 
 #ifdef __cplusplus
 }

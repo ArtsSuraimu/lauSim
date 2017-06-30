@@ -1,8 +1,8 @@
 /*
  * @Author: C. Jonischkeit 
  * @Date: 2017-06-26 14:20:50 
- * @Last Modified by:   D. Yang 
- * @Last Modified time: 2017-06-26 14:20:50 
+ * @Last Modified by:   C. Jonischkeit
+ * @Last Modified time: 2017-06-30 12:58:45 
  */
 #ifndef COM_H
 #define COM_H
@@ -28,6 +28,8 @@ typedef struct {
     int (*notify_extern) (char* msg, int* len_msg);
     int (*isr_injection) (...);  //TODO: Understand This
 } com;
+
+typedef com *(*get_com_fun) ();
 
 #ifdef __cpluplus
 }

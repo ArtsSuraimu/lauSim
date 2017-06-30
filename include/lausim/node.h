@@ -1,13 +1,11 @@
 /*
  * @Author: C. Jonischkeit 
  * @Date: 2017-06-26 14:20:38 
- * @Last Modified by:   D. Yang 
- * @Last Modified time: 2017-06-26 14:20:38 
+ * @Last Modified by:   C. Jonischkeit
+ * @Last Modified time: 2017-06-30 13:03:00 
  */
 #ifndef NODE_H
 #define NODE_H
-
-#include "types.h"
 
 #ifdef __cpluplus
 namespace lauSim {
@@ -26,7 +24,6 @@ typedef enum tag_type{
 typedef struct tag_component{
     char *name;
     unsigned severity;
-    percentage_t degree;
 } component;
 
 typedef struct {
@@ -34,10 +31,6 @@ typedef struct {
     int id;
     node_type_t type;
     unsigned num_components;
-    
-    rate_t failure_rate;
-    rate_t recovery_rate;
-
     component **components;
 } node;
 
