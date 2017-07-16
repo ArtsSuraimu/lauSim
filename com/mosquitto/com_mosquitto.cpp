@@ -22,7 +22,8 @@ int call_callback(char *a , char *b, unsigned c) {
 }
 
 com com_callback{
-    NULL // notify_fail
+    NULL, // notify_fail
+    NULL  // notify_extern
 };
 
 int

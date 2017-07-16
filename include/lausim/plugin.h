@@ -44,9 +44,9 @@ typedef struct tag_plugin{
 
 typedef struct {
     int version;
-    int (*register_plugin) (const plugin *);
-    const plugin *(*by_name) (const char *name);
-    const plugin *(*by_type) (plugin_type_t type);
+    int (*register_plugin) (plugin *);
+    plugin *(*by_name) (const char *name);
+    plugin *(*by_type) (plugin_type_t type);
 } plugin_manager_interface;
 
 typedef int (*init_fun) (const plugin_manager_interface*, int argc, char **argv);

@@ -26,7 +26,6 @@ typedef struct {
      */
     int (*notify_fail) (char *node, char *component, unsigned severity);
     int (*notify_extern) (char* msg, int* len_msg);
-    int (*isr_injection) (...);  //TODO: Understand This
 } com;
 
 typedef com *(*get_com_fun) ();
