@@ -1,0 +1,8 @@
+[libs]
+libecho.so --arg1 -h
+librandom.so -n 5
+
+[general]
+com = echo
+log = echo
+fault = random
