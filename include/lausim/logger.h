@@ -14,7 +14,7 @@ namespace lauSim{
 extern "C" {
 #endif
 
-typedef void (*lausim_log_fun)(log_level l, char *msg);
+typedef void (*lausim_log_fun)(log_level l, const char *msg);
 
 typedef struct tag_logger{
     int version;

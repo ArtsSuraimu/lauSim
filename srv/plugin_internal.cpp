@@ -14,7 +14,7 @@
 
 using namespace lauSim;
 
-void log_stdout(log_level l, char *str) {
+void log_stdout(log_level l, const char *str) {
     const char * prefix;
     switch (l) {
     default:
