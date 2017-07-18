@@ -9,7 +9,8 @@
 #include <vector>
 
 #include "library.h"
-#include "../include/lausim/plugin.h"
+#include <lausim/logger.h>
+#include <lausim/plugin.h>
 
 namespace lauSim {
 
@@ -19,14 +20,15 @@ class plugin_manager {
 public:
     int init();
     int load_library(char *file, int argc, char **opts);
-    int register_plugin(const plugin *p);
-    const plugin * get_by_name(const char *name);
-    const plugin * get_by_type(plugin_type_t type);
+    int register_plugin(plugin *p);
+    plugin * get_by_name(const char *name);
+    plugin * get_by_type(plugin_type_t type);
     int unregister_plugin(const char *name);
     void cleanup();
+    logger * logger_used;
 private:
     bool is_init;
-    std::vector<const plugin*> plugins;
+    std::vector<plugin*> plugins;
     std::vector<library> libraries;
 };
 

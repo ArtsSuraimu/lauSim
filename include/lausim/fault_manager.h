@@ -7,9 +7,9 @@
 #ifndef FAULT_MANAGER_H
 #define FAULT_MANAGER_H
 
-#include "node.h"
+#include <lausim/node.h>
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 namespace lauSim {
 extern "C" {
 #endif  //__cplusplus
@@ -41,7 +41,7 @@ typedef struct tag_fault_manager{
      *  param nodes output: the nodes
      *  return 0 on success
      */
-    int (*get_nodes)(size_t *num_nodes, node **nodes);
+    int (*get_nodes)(size_t *num_nodes, node ***nodes);
 
     /**
      *  Advances the time by one tic. It is caled in regular intervals
@@ -52,9 +52,9 @@ typedef struct tag_fault_manager{
     /**
      *  this functions asks the manager if and which nodes have failed
      *  param failed the node and component that failed (output)
-     *  result 0 if a node failed, anything else if no node failed
+     *  result 0 if a node failed, a positive number 
      */
-    int (*get_fail)(fault *failed);
+    int (*get_fail)(fault ***failed);
 
     /**
      *  forces a fault
@@ -64,7 +64,7 @@ typedef struct tag_fault_manager{
 
 typedef fault_manager *(*get_fault_manager_fun) ();
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 }
 #endif

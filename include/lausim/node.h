@@ -7,10 +7,9 @@
 #ifndef NODE_H
 #define NODE_H
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 namespace lauSim {
 extern "C" {
-typedef unsigned char bool;
 #endif
 
 /* detonates what type the node is. may be a critical node */
@@ -19,7 +18,6 @@ typedef enum tag_type{
 	network_switch,
 	pdu
 } node_type_t;
-
 
 typedef struct tag_component{
     char *name;
@@ -34,7 +32,7 @@ typedef struct {
     component **components;
 } node;
 
-#ifdef __cpluplus
+#ifdef __cplusplus
 }
 }
 #endif

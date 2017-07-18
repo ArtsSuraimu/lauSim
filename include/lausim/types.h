@@ -22,7 +22,11 @@ typedef enum tag_log_level{
     LL_Warning,
     LL_Error,
     LL_Fatal
-}log_level;
+} log_level;
+
+typedef uint64_t plugin_type_t;
+typedef int (*post_init_fun) ();
+typedef int (*cleanup_fun) ();
 
 #ifndef __cplusplus
 typedef unsigned char bool;
