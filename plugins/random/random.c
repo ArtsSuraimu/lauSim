@@ -80,26 +80,26 @@ fault_manager *get_fm() {
     return &fm;
 }
 
-char optstr[] = "n:p:";
-
 int init(const plugin_manager_interface *inter, int argc, char **argv) {
-    optind = 0;
-    int opt;
     int i;
-    while ((opt = getopt(argc, argv, optstr)) > 0) {
-        switch(opt){
-        case 'n':
-            num = strtol(optarg, NULL, 0);
-        case 'p':
-            prob = strtol(optarg, NULL, 0);
-        default:
-            puts("[ERROR] unrecognized option");
-            return -1;
-        }
+
+    for (int n = 0; n < argc; n++) {
+        printf("[RANDOM] Arg #%d: %s\n", n, argv[n]);
     }
 
-    if (num < 0)
+    if (argc < 1) {
+        printf("[FATAL] No node number is specifyed\n");
         return -1;
+    }
+
+    num = strtol(argv[0], NULL, 0);
+
+    if (num < 0) {
+        printf("[FATAL] [RANDOM] invalid number of nodes\n");
+        return -1;
+    }
+
+    printf("[DEBUG] creating %d nodes\n", num);
 
     nodes = calloc(num, sizeof(node*));
     for (i = 0; i < num; i++) {
@@ -115,14 +115,19 @@ int init(const plugin_manager_interface *inter, int argc, char **argv) {
         nodes[i]->p.components = NULL;
         nodes[i]->healthy = 1;
     }
+
+    inter->register_plugin(&random_plugin);
+
     return 0;
 }
 
 int cleanup() {
     int i;
     free_faults();
-    for (i = 0; i < num; i++)
+    for (i = 0; i < num; i++){
         free(nodes[i]->p.name);
+        free(nodes[i]);
+    }
     free(nodes);
     return 0;
 }

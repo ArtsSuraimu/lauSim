@@ -1,8 +1,7 @@
 [libs]
-libecho.so --arg1 -h
-librandom.so -n 5
+./libecho.so --arg1 -h
+./librandom.so 5
 
-[general]
+[config]
 com = echo
-log = echo
 fault = random

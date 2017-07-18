@@ -68,7 +68,7 @@ logger *get_logger() {
 }
 
 const plugin_manager_interface interface = {
-    plugin_manager_version,
+    PL_INTF_VERSION,
     register_plugin_c,
     by_name_c,
     by_type_c,
@@ -88,34 +88,41 @@ int plugin_manager::init() {
 }
 
 int plugin_manager::load_library(char *file, int argc, char **argv) {
-    library nlib;
+    std::unique_ptr<library> nlib(new library());
     init_fun init;
 
-    nlib.argc = argc;
+    nlib->argc = argc;
     
 
-    if (nlib.open(file))
+    if (nlib->open(file)){
+        std::cout << "[FATAL] unable to load " << file << std::endl;
         return -1;
+    }
     
-    init = (init_fun) nlib.get_sym_addr("init");
-    if (init == nullptr)
+    init = (init_fun) nlib->get_sym_addr("init");
+    if (init == nullptr){
+        std::cout << "[FATAL] unable to get symbol init in " << file << std::endl;
         return -2;
+    }
     
     // create a copy of the arguments
-    nlib.argv = new char*[argc];
+    nlib->argv = new char*[argc];
     for (int i = 0; i < argc; i ++) {
-        nlib.argv[i] = new char[strlen(argv[i]) + 1];
-        strcpy(nlib.argv[i], argv[i]);
+        nlib->argv[i] = new char[strlen(argv[i]) + 1];
+        strcpy(nlib->argv[i], argv[i]);
     }
 
-    if (init(&interface, argc, nlib.argv))
+    if (init(&interface, argc, nlib->argv)) {
+        std::cout << "[FATAL] initialization of " << file << " failed" << std::endl;
         return -3;
+    }
     
-    libraries.push_back(nlib);
+    libraries.push_back(std::move(nlib));
     return 0;
 }
 
 int plugin_manager::register_plugin(plugin *p){
+    std::cout << "[DEBUG] trying to register new plugin " << p->name << std::endl;
     if (this->get_by_name(p->name) != nullptr)
         return -1;
     plugins.push_back(p);
@@ -124,7 +131,7 @@ int plugin_manager::register_plugin(plugin *p){
 
 plugin* plugin_manager::get_by_name(const char *name) {
     auto pos = std::find_if(plugins.begin(), plugins.end()
-                            , [=](const plugin *p){return 0 == strcmp(name, p->name);});
+                            , [name](plugin *p){return 0 == strcmp(name, p->name);});
     if (pos == plugins.end())
         return nullptr;
     else return *pos;
@@ -132,8 +139,25 @@ plugin* plugin_manager::get_by_name(const char *name) {
 
 plugin* plugin_manager::get_by_type(plugin_type_t type) {
     auto pos = std::find_if(plugins.begin(), plugins.end()
-                            , [=](const plugin *p){return (p->pl_type & type) == type;});
+                            , [type](plugin *p){return (p->pl_type & type) == type;});
     if (pos == plugins.end())
         return nullptr;
     else return *pos;
+}
+
+void plugin_manager::cleanup() {
+    int i;
+    for (plugin *p: plugins) {
+        if (p->cleanup != nullptr)
+            p->cleanup();
+    }
+
+    for (std::unique_ptr<library> &lib: libraries) {
+        for (i = 0; i < lib->argc; i++) {
+            delete[] lib->argv[i];
+        }
+        delete[] lib->argv;
+    }
+
+    libraries.clear();
 }

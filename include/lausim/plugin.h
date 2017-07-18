@@ -26,8 +26,8 @@ extern "C" {
 #define PL_LOGGER 4
 #define PL_TOPOLOGY 8
 
-#define SET_PL_TYPE(pl,t) = (pl |= t)
-#define HAS_PL_TYPE(pl,t) = (pl & t)
+#define SET_PL_TYPE(pl,t) ((pl).pl_type |= t)
+#define HAS_PL_TYPE(pl,t) ((pl).pl_type & t)
 
 typedef struct tag_plugin{
     int version;

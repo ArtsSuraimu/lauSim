@@ -31,8 +31,10 @@ int init(const plugin_manager_interface *i, int argc, char **argv) {
         printf("[ECHO] Arg #%d: %s\n", n, argv[n]);
     }
 
-    if (i->version != PL_INTF_VERSION)
+    if (i->version != PL_INTF_VERSION) {
+        printf("[FATAL] [ECHO] plugin manager version mismatch\n");
         return -1;
+    }
 
     i->register_plugin(&echo_plugin);
 

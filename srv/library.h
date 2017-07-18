@@ -12,9 +12,14 @@ namespace lauSim {
 
 class library {
 public:
+    library() = default;
+    library(library&&) = default;
+    library& operator=(library&&) = default;
+    library(library&) = delete;
+    library& operator=(library&) = delete;
     int open(const char *filename);
     void *get_sym_addr(const char *symname);
-    virtual ~library();
+    ~library();
     int argc;
     char **argv;
 protected:

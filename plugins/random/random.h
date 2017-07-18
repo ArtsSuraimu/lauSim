@@ -24,7 +24,7 @@ int init (const plugin_manager_interface*, int argc, char **argv);
 int cleanup(void);
 int prob = RAND_MAX / 10;
 
-plugin echo_plugin = {
+plugin random_plugin = {
     1,          // version
     2,          // pl_type fault_manager
     "random",   // name

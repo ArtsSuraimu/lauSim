@@ -24,6 +24,7 @@ std::vector<std::pair<std::string,int>> tokenids =
     {
         {"[library]", libs_id},
         {"[lib]", libs_id},
+        {"[libs]", libs_id},
         {"[config]", config_id},
         {"com-actor", com_actor_id},
         {"com_actor", com_actor_id},
@@ -75,24 +76,44 @@ int config::set_config(int id, std::stringstream &stream, plugin_manager &manage
     case com_actor_id:
         if (com_actor != nullptr)
             std::cout << "[WARNING] com actor is reassigned" << std::endl;
-        com_actor = plugin;
+        if (HAS_PL_TYPE(*plugin, PL_COM))
+            com_actor = plugin;
+        else {
+            std::cout << "[FATAL] plugin \"" << plugin->name << "\" is not a com plugin" << std::endl;
+            return -1;
+        }
         if (id == com_actor_id)
             break;
         /* fall through */
     case com_notify_id:
         if (com_notify != nullptr)
             std::cout << "[WARNING] com actor is reassigned" << std::endl;
-        com_notify = plugin;
+        if (HAS_PL_TYPE(*plugin, PL_COM))
+            com_notify = plugin;
+        else {
+            std::cout << "[FATAL] plugin \"" << plugin->name << "\" is not a com plugin" << std::endl;
+            return -1;
+        }
         break;
     case logger_id:
         if (logger != nullptr)
             std::cout << "[WARNING] logger is reassigned" << std::endl;
-        logger = plugin;
+        if (HAS_PL_TYPE(*plugin, PL_LOGGER))
+            logger = plugin;
+        else {
+            std::cout << "[FATAL] plugin \"" << plugin->name << "\" is not a logger plugin" << std::endl;
+            return -1;
+        }
         break;
     case manager_id:
         if (this->manager != nullptr)
             std::cout << "[WARNING] manager is reassigned" << std::endl;
-        this->manager = plugin;
+        if (HAS_PL_TYPE(*plugin, PL_FAULT_MANAGER))
+            this->manager = plugin;
+        else {
+            std::cout << "[FATAL] plugin \"" << plugin->name << "\" is not a fault manager plugin" << std::endl;
+            return -1;
+        }
         break;
     case tic_id:
         if (tic_length != 0)
@@ -137,6 +158,7 @@ int config::load_config(char *filename, plugin_manager &manager) {
         std::string token;
         int id;
 
+        std::cout << "[DEBUG] line: " << line << std::endl;
         // skip empty lines
         if (line.empty())
             continue;
@@ -156,7 +178,7 @@ int config::load_config(char *filename, plugin_manager &manager) {
         // if we are in loading lib state
         if (state == (1 << libs_id)) {
             // loab the lib
-            if(load_lib(line, linestr, manager))
+            if(load_lib(token, linestr, manager))
                 return -1;
             continue;
         }

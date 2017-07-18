@@ -7,6 +7,7 @@
 #define PLUGIN_INTERNAL_H
 
 #include <vector>
+#include <memory>
 
 #include "library.h"
 #include <lausim/logger.h>
@@ -26,10 +27,10 @@ public:
     int unregister_plugin(const char *name);
     void cleanup();
     logger * logger_used;
+    std::vector<plugin*> plugins;
 private:
     bool is_init;
-    std::vector<plugin*> plugins;
-    std::vector<library> libraries;
+    std::vector<std::unique_ptr<library>> libraries;
 };
 
 }

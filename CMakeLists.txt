@@ -3,7 +3,8 @@ project(lauSim VERSION 0.1 LANGUAGES C CXX)
 
 include(GNUInstallDirs)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -g")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -pedantic -g")
+set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -pedantic -g")
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
 file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp"
