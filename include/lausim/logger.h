@@ -14,12 +14,15 @@ namespace lauSim{
 extern "C" {
 #endif
 
+typedef void (*set_log_level_fun) (log_level);
 typedef void (*lausim_log_fun)(log_level l, const char *msg);
 
 typedef struct tag_logger{
     int version;
+    set_log_level_fun set_ll;
     lausim_log_fun log_fun;
 } logger;
+
 
 typedef logger *(*get_logger_fun) ();
 

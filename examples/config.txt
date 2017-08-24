@@ -1,7 +1,8 @@
 [libs]
-./libecho.so --arg1 -h
-./librandom.so 5
+./plugins/echo/libecho.so --arg1 -h
+./plugins/random/librandom.so 5
 
 [config]
 com = echo
 fault = random
+tic = 1000

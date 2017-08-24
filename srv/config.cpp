@@ -39,6 +39,8 @@ std::vector<std::pair<std::string,int>> tokenids =
         {"fault_manager", manager_id},
         {"fault", manager_id},
         {"manager", manager_id},
+        {"tic", tic_id},
+        {"tik", tic_id}
     };
 
 int get_token_identifyer(const std::string &tk) {
@@ -54,12 +56,12 @@ int config::set_config(int id, std::stringstream &stream, plugin_manager &manage
     plugin *plugin;
 
     if (!(stream >> value) || value != "="){
-        std::cout << "[ERROR] '=' expected in assignment" << std::endl;
+        manager.logger_used->log_fun(LL_Error, "'=' expected in assignment");
         return -1;
     }
 
     if (!(stream >> value)) {
-        std::cout << "[ERROR] expected assignment before end of line" << std::endl;
+        manager.logger_used->log_fun(LL_Error, "expected assignment before end of line");
         return -1;
     }
 
@@ -67,7 +69,7 @@ int config::set_config(int id, std::stringstream &stream, plugin_manager &manage
         plugin = manager.get_by_name(value.c_str());
 
     if (id != tic_id && plugin == nullptr) {
-        std::cerr << "[ERROR] plugin \"" << value << "\" is not loaded" << std::endl;
+        manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + value + std::string("\" is not loaded")).c_str());
         return -1;
     }
 
@@ -75,11 +77,11 @@ int config::set_config(int id, std::stringstream &stream, plugin_manager &manage
     case com_all_id:
     case com_actor_id:
         if (com_actor != nullptr)
-            std::cout << "[WARNING] com actor is reassigned" << std::endl;
+            manager.logger_used->log_fun(LL_Warning, "com actor is reassigned");
         if (HAS_PL_TYPE(*plugin, PL_COM))
             com_actor = plugin;
         else {
-            std::cout << "[FATAL] plugin \"" << plugin->name << "\" is not a com plugin" << std::endl;
+            manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a com plugin")).c_str());
             return -1;
         }
         if (id == com_actor_id)
@@ -87,37 +89,37 @@ int config::set_config(int id, std::stringstream &stream, plugin_manager &manage
         /* fall through */
     case com_notify_id:
         if (com_notify != nullptr)
-            std::cout << "[WARNING] com actor is reassigned" << std::endl;
+            manager.logger_used->log_fun(LL_Warning, "com notify is reassigned");
         if (HAS_PL_TYPE(*plugin, PL_COM))
             com_notify = plugin;
         else {
-            std::cout << "[FATAL] plugin \"" << plugin->name << "\" is not a com plugin" << std::endl;
+            manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a com plugin")).c_str());
             return -1;
         }
         break;
     case logger_id:
         if (logger != nullptr)
-            std::cout << "[WARNING] logger is reassigned" << std::endl;
+            manager.logger_used->log_fun(LL_Warning, "logger is reassigned");
         if (HAS_PL_TYPE(*plugin, PL_LOGGER))
             logger = plugin;
         else {
-            std::cout << "[FATAL] plugin \"" << plugin->name << "\" is not a logger plugin" << std::endl;
+            manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a logger plugin")).c_str());
             return -1;
         }
         break;
     case manager_id:
         if (this->manager != nullptr)
-            std::cout << "[WARNING] manager is reassigned" << std::endl;
+            manager.logger_used->log_fun(LL_Warning, "fault manager is reassigned");
         if (HAS_PL_TYPE(*plugin, PL_FAULT_MANAGER))
             this->manager = plugin;
         else {
-            std::cout << "[FATAL] plugin \"" << plugin->name << "\" is not a fault manager plugin" << std::endl;
+            manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a fault manager plugin")).c_str());
             return -1;
         }
         break;
     case tic_id:
         if (tic_length != 0)
-            std::cout << "[WARNING] tic length is reassigned" << std::endl;
+            manager.logger_used->log_fun(LL_Warning, "tic length is reassigned");
         tic_length = std::stoul(value);
     }
     return 0;
@@ -149,7 +151,7 @@ int config::load_config(char *filename, plugin_manager &manager) {
     conf_file.open(filename, std::ios::in);
 
     if (!conf_file.is_open()) {
-        std::cerr << "unable to open configuration file!" << std::endl;
+        manager.logger_used->log_fun(LL_Error, "unable to open configuration file!");
         return -1;
     }
 
@@ -158,7 +160,7 @@ int config::load_config(char *filename, plugin_manager &manager) {
         std::string token;
         int id;
 
-        std::cout << "[DEBUG] line: " << line << std::endl;
+        manager.logger_used->log_fun(LL_Debug, (std::string("Line: ") + line).c_str());
         // skip empty lines
         if (line.empty())
             continue;
