@@ -44,7 +44,7 @@ void log_stdout(log_level l, const char *str) {
         break;
     }
 
-    std::cout << prefix << " " << str << std::endl;
+    std::cerr << prefix << " " << str << std::endl;
 }
 
 void set_min_log_level(log_level l) {

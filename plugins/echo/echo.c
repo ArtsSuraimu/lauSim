@@ -11,7 +11,10 @@ plugin_manager_interface *pif;
 logger *llog;
 
 int notify_fail(char *node, char *component, unsigned sev) {
-    printf("Node \"%s\" Component \"%s\" failed with severity %d\n", node, component, sev);
+    if (component)
+        printf("Node \"%s\" Component \"%s\" failed with severity %d\n", node, component, sev);
+    else
+        printf("Node \"%s\" %s\n", node, sev ? "failed" : "recovered");
     return 0;
 }
 

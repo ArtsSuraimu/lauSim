@@ -7,6 +7,10 @@
 #include <unistd.h>
 #include <cassert>
 #include <cstdlib>
+#include <chrono>
+#include <thread>
+#include <atomic>
+#include <csignal>
 
 #include <lausim/plugin.h>
 #include <lausim/node.h>
@@ -15,14 +19,31 @@
 
 using namespace lauSim;
 
+// time keeping
+
+std::chrono::time_point<std::chrono::high_resolution_clock> timestamp;
+std::chrono::nanoseconds duration;
+
+// configuration
+
 plugin_manager plugins;
 fault_manager *manager;
+com *com_actor;
+com *com_notify;
 config conf;
 
-char *cfile = nullptr;
 size_t num_nodes;
 node **nodes;
+
+// initialization
+
+char *cfile = nullptr;
 char optstr[] = "c:l:";
+volatile std::sig_atomic_t termreq;
+
+void term_handler(int signal){
+    termreq = 1;
+}
 
 void update_log_level (unsigned new_ll) {
     log_level ll;
@@ -50,6 +71,7 @@ void update_log_level (unsigned new_ll) {
 }
 
 int init(unsigned loglevel) {
+
     if (plugins.init()){ 
         // since the plugin manager has not been properly initialize, there is no logger available
         std::cout << "[FATAL] unable to initialize plugin system" << std::endl;
@@ -91,18 +113,43 @@ int init(unsigned loglevel) {
         return 1;
     }
 
+    com_actor = conf.com_actor->c();
+    com_notify = conf.com_notify->c();
+
     manager = conf.manager->fm();
     if (manager->get_nodes(&num_nodes, &nodes)) {
         plugins.logger_used->log_fun(LL_Fatal, "unable to get nodes");
         return 1;
     }
 
+    termreq = 0;
+    std::signal(SIGTERM, term_handler);
+    std::signal(SIGABRT, term_handler);
+    std::signal(SIGINT, term_handler);
+    duration = std::chrono::nanoseconds(conf.tic_length);
+    timestamp = std::chrono::high_resolution_clock::now();
+
     return 0;
 }
 
+void skip_to_end_of_tic() {
+    unsigned skip = 0;
+
+    for (timestamp += duration; timestamp < std::chrono::high_resolution_clock::now(); timestamp += duration)
+        skip++;
+
+    if (skip) 
+        plugins.logger_used->log_fun(LL_Warning, (std::to_string(skip) + std::string(" tics skipped - increase tic time?")).c_str());
+    
+    std::this_thread::sleep_until(timestamp);
+}
+
 int main(int argc, char **argv) {
+    char buf[512];
     int opt;
     unsigned loglevel = 0;
+    fault **failed;
+    int i, num_failed;
 
     // read command line options
     while((opt = getopt(argc, argv, optstr)) > 0) {
@@ -114,7 +161,7 @@ int main(int argc, char **argv) {
             loglevel = (unsigned) strtoul(optarg, NULL, 0);
             break;
         default:
-            std::cout << "unrecognized option '" << (char) opt << "'" << std::endl;
+            std::cerr << "unrecognized option '" << (char) opt << "'" << std::endl;
             return -1;
         }
     }
@@ -128,6 +175,22 @@ int main(int argc, char **argv) {
         return 1;
 
     plugins.logger_used->log_fun(LL_Info, "initialization complete");
+
+    while(!termreq) {
+        manager->tic();
+        num_failed = manager->get_fail(&failed);
+
+        for (i = 0; i < num_failed ; i++) {
+            com_actor->notify_fail(failed[i]->node, failed[i]->component, failed[i]->severity);
+            if (failed[i]->component == NULL) {
+                snprintf(buf, sizeof(buf), "Node %s %s", failed[i]->node, (failed[i]->severity) ? "failed" : "recovered");
+                plugins.logger_used->log_fun(LL_Info, buf);
+                // TODO send fail via com
+            }
+        }
+
+        skip_to_end_of_tic();
+    }
 
     plugins.logger_used->log_fun(LL_Info, "cleaning up");
     plugins.cleanup();

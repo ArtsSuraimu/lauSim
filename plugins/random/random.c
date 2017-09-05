@@ -32,7 +32,7 @@ void tic(){
     int i;
 
     // free previous faults
-    free(faults);
+    free_faults();
     faults = NULL;
     num_fault = 0;   
     
