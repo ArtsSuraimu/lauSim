@@ -24,6 +24,7 @@ public:
     static int cleanup_mosquitto();
     int init(const char * address = "localhost", int port = 1883, unsigned keep_alive = 60);
     com *get_com();
+    void cleanup();
     int notify_fail(char *target, char *component, unsigned severity);
 private:
     std::unique_ptr<mosqpp::mosquittopp> con;

@@ -135,12 +135,18 @@ extern "C" int init (const plugin_manager_interface* pli, int argc, char **argv)
     return 0;
 }
 
+void ComMosquitto::cleanup(){
+    if (is_init)
+        con->disconnect();
+}
+
 int post_init() {
     log = pi->get_logger();
     return 0;
 }
 
 int cleanup() {
+    instance.cleanup();
     ComMosquitto::cleanup_mosquitto();
     return 0;
 }
