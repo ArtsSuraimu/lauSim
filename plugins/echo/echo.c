@@ -18,7 +18,7 @@ int notify_fail(char *node, char *component, unsigned sev) {
     return 0;
 }
 
-int notify_extern(char *msg, int *len_msg) {
+int notify_extern(char *msg, unsigned len_msg) {
     printf("Node Failed: %s\n", msg);
     return 0;
 }
@@ -39,6 +39,12 @@ int post_init() {
 
 int init(const plugin_manager_interface *i, int argc, char **argv) {
     char buf[512];
+
+    if (i->version != PL_INTF_VERSION) {
+        printf("[ECHO] Plugin interface version missmatch\n");
+        return 1;
+    }
+
     llog = i->get_logger();
     for (int n = 0; n < argc; n++) {
         snprintf(buf, sizeof(buf), "[ECHO] Arg #%d: %s", n, argv[n]);

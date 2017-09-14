@@ -11,7 +11,7 @@ using namespace lauSim;
 int library::open(const char *filename){
     if (is_init)
         return -1;
-    handle = dlopen(filename, RTLD_LAZY);
+    handle = dlmopen(LM_ID_NEWLM, filename, RTLD_LAZY);
     if (handle == nullptr)
         return -2;
     name = std::string(filename);

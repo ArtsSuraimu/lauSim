@@ -78,7 +78,7 @@ int config::set_config(int id, std::stringstream &stream, plugin_manager &manage
     case com_actor_id:
         if (com_actor != nullptr)
             manager.logger_used->log_fun(LL_Warning, "com actor is reassigned");
-        if (HAS_PL_TYPE(*plugin, PL_COM))
+        if (HAS_PL_TYPE(*plugin, PL_COM_ACTOR))
             com_actor = plugin;
         else {
             manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a com plugin")).c_str());
@@ -90,7 +90,7 @@ int config::set_config(int id, std::stringstream &stream, plugin_manager &manage
     case com_notify_id:
         if (com_notify != nullptr)
             manager.logger_used->log_fun(LL_Warning, "com notify is reassigned");
-        if (HAS_PL_TYPE(*plugin, PL_COM))
+        if (HAS_PL_TYPE(*plugin, PL_COM_EXTERN))
             com_notify = plugin;
         else {
             manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a com plugin")).c_str());

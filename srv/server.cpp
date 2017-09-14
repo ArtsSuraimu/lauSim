@@ -147,9 +147,10 @@ void skip_to_end_of_tic() {
 int main(int argc, char **argv) {
     char buf[512];
     int opt;
-    unsigned loglevel = 0;
+    unsigned loglevel = 0, msg_len;
     fault **failed;
     int i, num_failed;
+    unsigned long tic_num = 0;
 
     // read command line options
     while((opt = getopt(argc, argv, optstr)) > 0) {
@@ -180,15 +181,22 @@ int main(int argc, char **argv) {
         manager->tic();
         num_failed = manager->get_fail(&failed);
 
+        if (num_failed) {
+            snprintf(buf, sizeof(buf), "Tic #%lu", tic_num);
+            plugins.logger_used->log_fun(LL_Info, buf);
+        }
+
         for (i = 0; i < num_failed ; i++) {
             com_actor->notify_fail(failed[i]->node, failed[i]->component, failed[i]->severity);
             if (failed[i]->component == NULL) {
-                snprintf(buf, sizeof(buf), "Node %s %s", failed[i]->node, (failed[i]->severity) ? "failed" : "recovered");
+                msg_len = snprintf(buf, sizeof(buf), "Node %s %s", failed[i]->node, (failed[i]->severity) ? "failed" : "recovered");
                 plugins.logger_used->log_fun(LL_Info, buf);
+                com_notify->notify_extern(buf, msg_len);
                 // TODO send fail via com
             }
         }
 
+        ++tic_num;
         skip_to_end_of_tic();
     }
 

@@ -19,7 +19,7 @@ extern plugin_manager_interface *pif;
 
 plugin echo_plugin = {
     1, // version
-    1, // pl_tye COM
+    PL_COM_ACTOR | PL_COM_EXTERN, // pl_tye COM
     "echo", // name
 
     post_init,       // post init hook

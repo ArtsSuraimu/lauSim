@@ -26,7 +26,7 @@ int prob = RAND_MAX / 10;
 
 plugin random_plugin = {
     1,          // version
-    2,          // pl_type fault_manager
+    PL_FAULT_MANAGER,          // pl_type fault_manager
     "random",   // name
 
     NULL,       // post init hook

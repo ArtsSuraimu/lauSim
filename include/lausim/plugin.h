@@ -14,17 +14,18 @@
 #include <lausim/fault_manager.h>
 //#include <lausim/types.h>
 
-#define PL_INTF_VERSION 3
+#define PL_INTF_VERSION 4
 
 #ifdef __cplusplus
 namespace lauSim {
 extern "C" {
 #endif
 
-#define PL_COM 1
-#define PL_FAULT_MANAGER 2
-#define PL_LOGGER 4
-#define PL_TOPOLOGY 8
+#define PL_COM_ACTOR 1
+#define PL_COM_EXTERN 2
+#define PL_FAULT_MANAGER 4
+#define PL_LOGGER 8
+#define PL_TOPOLOGY 16
 
 #define SET_PL_TYPE(pl,t) ((pl).pl_type |= t)
 #define HAS_PL_TYPE(pl,t) ((pl).pl_type & t)

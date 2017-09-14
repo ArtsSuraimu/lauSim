@@ -83,6 +83,11 @@ fault_manager *get_fm() {
 int init(const plugin_manager_interface *inter, int argc, char **argv) {
     int i;
 
+    if (inter->version != PL_INTF_VERSION) {
+        printf("[RANDOM] Plugin interface version missmatch\n");
+        return 1;
+    }
+
     for (int n = 0; n < argc; n++) {
         printf("[RANDOM] Arg #%d: %s\n", n, argv[n]);
     }
