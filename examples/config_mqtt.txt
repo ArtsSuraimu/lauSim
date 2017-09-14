@@ -1,0 +1,10 @@
+[libs]
+./plugins/echo/libecho.so --arg1 -h
+./plugins/random/librandom.so 5
+./plugins/mosquitto/libcom_mqtt.so localhost
+
+[config]
+com_actor = mosquitto
+com_notify = echo
+fault = random
+tic = 1000000000
