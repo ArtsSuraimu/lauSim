@@ -8,6 +8,7 @@ set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -pedantic -g -Wno-unused-parameter")
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
 file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp"
+                  "${PROJECT_SOURCE_DIR}/srv/proto/*.cc"
                   "${PROJECT_SOURCE_DIR}/srv/*.cpp"
                   "${PROJECT_SOURCE_DIR}/com/mosquitto*.cpp")
 
@@ -15,7 +16,7 @@ file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp"
 MESSAGE( STATUS "SOURCES:   " ${SOURCES})
 
 add_executable(lauSim ${SOURCES})
-TARGET_LINK_LIBRARIES(lauSim mosquittopp dl)
+TARGET_LINK_LIBRARIES(lauSim mosquittopp dl protobuf)
 
 install(TARGETS lauSim EXPORT lauSimConfig
 	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

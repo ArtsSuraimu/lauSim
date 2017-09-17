@@ -25,7 +25,8 @@ public:
     int init(const char * address = "localhost", int port = 1883, unsigned keep_alive = 60);
     com *get_com();
     void cleanup();
-    int notify_fail(char *target, char *component, unsigned severity);
+    int notify_fail(const char *target, const char *component, unsigned severity);
+    int notify_extern(const char *msg, unsigned length);
 private:
     std::unique_ptr<mosqpp::mosquittopp> con;
     std::string hostname;
@@ -34,7 +35,7 @@ private:
 
 plugin mosquitto_plugin = {
     1,              // version
-    PL_COM_ACTOR,   // type
+    PL_COM_ACTOR | PL_COM_EXTERN,   // type
     name,    // name
 
     post_init,

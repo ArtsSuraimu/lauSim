@@ -16,6 +16,7 @@
 #include <lausim/node.h>
 #include "plugin_internal.h"
 #include "config.h"
+#include "proto/laik_ext.pb.h"
 
 using namespace lauSim;
 
@@ -147,7 +148,9 @@ void skip_to_end_of_tic() {
 int main(int argc, char **argv) {
     char buf[512];
     int opt;
-    unsigned loglevel = 0, msg_len;
+    std::string protoStrBuf;
+    unsigned loglevel = 0;
+    laik_ext_msg fail_msg;
     fault **failed;
     int i, num_failed;
     unsigned long tic_num = 0;
@@ -184,22 +187,35 @@ int main(int argc, char **argv) {
         if (num_failed) {
             snprintf(buf, sizeof(buf), "Tic #%lu", tic_num);
             plugins.logger_used->log_fun(LL_Info, buf);
-        }
+            fail_msg.Clear();
 
-        for (i = 0; i < num_failed ; i++) {
-            com_actor->notify_fail(failed[i]->node, failed[i]->component, failed[i]->severity);
-            if (failed[i]->component == NULL) {
-                msg_len = snprintf(buf, sizeof(buf), "Node %s %s", failed[i]->node, (failed[i]->severity) ? "failed" : "recovered");
-                plugins.logger_used->log_fun(LL_Info, buf);
-                com_notify->notify_extern(buf, msg_len);
-                // TODO send fail via com
+            for (i = 0; i < num_failed ; i++) {
+                com_actor->notify_fail(failed[i]->node, failed[i]->component, failed[i]->severity);
+                if (failed[i]->component == NULL) {
+                    snprintf(buf, sizeof(buf), "Node %s %s", failed[i]->node, (failed[i]->severity) ? "failed" : "recovered");
+                    plugins.logger_used->log_fun(LL_Info, buf);
+
+                    // send fail message
+                    if (failed[i]->severity == 0) {
+                        fail_msg.add_spare_nodes(failed[i]->node, strlen(failed[i]->node));
+                    } else {
+                        fail_msg.add_failing_nodes(failed[i]->node, strlen(failed[i]->node));
+                    }
+
+                    //com_notify->notify_extern(buf, msg_len);
+                    // TODO send fail via com
+                }
             }
+
+            fail_msg.SerializeToString(&protoStrBuf);
+            com_notify->notify_extern(protoStrBuf.c_str(), protoStrBuf.length());
         }
 
         ++tic_num;
         skip_to_end_of_tic();
     }
 
+    google::protobuf::ShutdownProtobufLibrary();
     plugins.logger_used->log_fun(LL_Info, "cleaning up");
     plugins.cleanup();
 }

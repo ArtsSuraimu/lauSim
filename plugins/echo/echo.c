@@ -10,7 +10,7 @@
 plugin_manager_interface *pif;
 logger *llog;
 
-int notify_fail(char *node, char *component, unsigned sev) {
+int notify_fail(const char *node, const char *component, unsigned sev) {
     if (component)
         printf("Node \"%s\" Component \"%s\" failed with severity %d\n", node, component, sev);
     else
@@ -18,7 +18,7 @@ int notify_fail(char *node, char *component, unsigned sev) {
     return 0;
 }
 
-int notify_extern(char *msg, unsigned len_msg) {
+int notify_extern(const char *msg, unsigned len_msg) {
     printf("Node Failed: %s\n", msg);
     return 0;
 }

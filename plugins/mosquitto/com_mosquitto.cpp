@@ -18,12 +18,13 @@ static bool init_state = false;
 ComMosquitto instance;
 logger *log;
 
-int notify_fail (char *, char *, unsigned);
+int notify_fail (const char *, const char *, unsigned);
+int notify_extern (const char *, unsigned);
 plugin_manager_interface* pi;
 
 com com_interface{
-    notify_fail, // notify_fail
-    NULL  // notify_extern
+    notify_fail,   // notify_fail
+    notify_extern  // notify_extern
 };
 
 int
@@ -69,7 +70,7 @@ int ComMosquitto::init(const char * addr, int port, unsigned keep_alive) {
     return 0;
 }
 
-int ComMosquitto::notify_fail(char *target, char *cmp, unsigned severity){
+int ComMosquitto::notify_fail(const char *target, const char *cmp, unsigned severity){
     std::stringstream topic;
     std::stringstream msg_buf;
     std::string msg;
@@ -87,6 +88,13 @@ int ComMosquitto::notify_fail(char *target, char *cmp, unsigned severity){
         log->log_fun(LL_Error, mosqpp::strerror(msqerr));
         return -1;
     }
+    return 0;
+}
+
+int ComMosquitto::notify_extern(const char *msg, unsigned length) {
+    if (!is_init)
+        return 1;
+    con->publish(NULL, "envelope/lausim", length, msg);
     return 0;
 }
 
@@ -155,7 +163,11 @@ com *get_com() {
     return &com_interface;
 }
 
-int notify_fail(char *node, char *component, unsigned severity) {
+int notify_fail(const char *node, const char *component, unsigned severity) {
     return instance.notify_fail(node, component, severity);
+}
+
+int notify_extern(const char *node, unsigned length) {
+    return instance.notify_extern(node, length);
 }
 }

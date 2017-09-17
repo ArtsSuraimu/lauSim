@@ -24,8 +24,8 @@ typedef struct {
      *  param component the name of the component that failed
      *  param severity the severity of the fail (e.g. total fail or just corruptions)
      */
-    int (*notify_fail) (char *node, char *component, unsigned severity);
-    int (*notify_extern) (char* msg, unsigned len_msg);
+    int (*notify_fail) (const char *node, const char *component, unsigned severity);
+    int (*notify_extern) (const char* msg, unsigned len_msg);
 } com;
 
 typedef com *(*get_com_fun) ();

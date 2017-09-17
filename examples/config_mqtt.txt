@@ -4,7 +4,6 @@
 ./plugins/mosquitto/libcom_mqtt.so localhost
 
 [config]
-com_actor = mosquitto
-com_notify = echo
+com = mosquitto
 fault = random
 tic = 1000000000
