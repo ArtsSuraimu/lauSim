@@ -16,7 +16,10 @@
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
-class BackchannelDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Backchannel> {
+class BackchannelDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<Backchannel>
+     _instance;
 } _Backchannel_default_instance_;
 
 namespace protobuf_backchannel_2eproto {
@@ -30,20 +33,20 @@ const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[1];
 }  // namespace
 
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTableField
-    const TableStruct::entries[] = {
+    const TableStruct::entries[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   {0, 0, 0, ::google::protobuf::internal::kInvalidMask, 0, 0},
 };
 
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::AuxillaryParseTableField
-    const TableStruct::aux[] = {
+    const TableStruct::aux[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   ::google::protobuf::internal::AuxillaryParseTableField(),
 };
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
-    TableStruct::schema[] = {
-  { NULL, NULL, 0, -1, -1, false },
+    TableStruct::schema[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+  { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
 };
 
-const ::google::protobuf::uint32 TableStruct::offsets[] = {
+const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Backchannel, _has_bits_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Backchannel, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -54,8 +57,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] = {
   1,
   0,
 };
-
-static const ::google::protobuf::internal::MigrationSchema schemas[] = {
+static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   { 0, 7, sizeof(Backchannel)},
 };
 
@@ -85,26 +87,22 @@ void protobuf_RegisterTypes(const ::std::string&) {
 }
 
 }  // namespace
-
-void TableStruct::Shutdown() {
-  _Backchannel_default_instance_.Shutdown();
-  delete file_level_metadata[0].reflection;
-}
-
 void TableStruct::InitDefaultsImpl() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::internal::InitProtobufDefaults();
-  _Backchannel_default_instance_.DefaultConstruct();
-}
+  _Backchannel_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_Backchannel_default_instance_);}
 
 void InitDefaults() {
   static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
   ::google::protobuf::GoogleOnceInit(&once, &TableStruct::InitDefaultsImpl);
 }
+namespace {
 void AddDescriptorsImpl() {
   InitDefaults();
-  static const char descriptor[] = {
+  static const char descriptor[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
       "\n\021backchannel.proto\"c\n\013Backchannel\022\"\n\004ty"
       "pe\030\001 \002(\0162\024.Backchannel.MsgType\022\021\n\tLogErr"
       "Msg\030\002 \001(\t\"\035\n\007MsgType\022\007\n\003LOG\020\000\022\t\n\005ERROR\020\001"
@@ -113,14 +111,14 @@ void AddDescriptorsImpl() {
       descriptor, 120);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "backchannel.proto", &protobuf_RegisterTypes);
-  ::google::protobuf::internal::OnShutdown(&TableStruct::Shutdown);
 }
+} // anonymous namespace
 
 void AddDescriptors() {
   static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
   ::google::protobuf::GoogleOnceInit(&once, &AddDescriptorsImpl);
 }
-// Force AddDescriptors() to be called at static initialization time.
+// Force AddDescriptors() to be called at dynamic initialization time.
 struct StaticDescriptorInitializer {
   StaticDescriptorInitializer() {
     AddDescriptors();
@@ -220,6 +218,10 @@ Backchannel* Backchannel::New(::google::protobuf::Arena* arena) const {
 
 void Backchannel::Clear() {
 // @@protoc_insertion_point(message_clear_start:Backchannel)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   if (has_logerrmsg()) {
     GOOGLE_DCHECK(!logerrmsg_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
     (*logerrmsg_.UnsafeRawStringPointer())->clear();
@@ -242,7 +244,7 @@ bool Backchannel::MergePartialFromCodedStream(
       // required .Backchannel.MsgType type = 1;
       case 1: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u)) {
+            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
           int value;
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
@@ -250,7 +252,8 @@ bool Backchannel::MergePartialFromCodedStream(
           if (::Backchannel_MsgType_IsValid(value)) {
             set_type(static_cast< ::Backchannel_MsgType >(value));
           } else {
-            mutable_unknown_fields()->AddVarint(1, value);
+            mutable_unknown_fields()->AddVarint(
+                1, static_cast< ::google::protobuf::uint64>(value));
           }
         } else {
           goto handle_unusual;
@@ -261,11 +264,11 @@ bool Backchannel::MergePartialFromCodedStream(
       // optional string LogErrMsg = 2;
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u)) {
+            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_logerrmsg()));
           ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-            this->logerrmsg().data(), this->logerrmsg().length(),
+            this->logerrmsg().data(), static_cast<int>(this->logerrmsg().length()),
             ::google::protobuf::internal::WireFormat::PARSE,
             "Backchannel.LogErrMsg");
         } else {
@@ -276,13 +279,11 @@ bool Backchannel::MergePartialFromCodedStream(
 
       default: {
       handle_unusual:
-        if (tag == 0 ||
-            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+        if (tag == 0) {
           goto success;
         }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, mutable_unknown_fields()));
+              input, tag, _internal_metadata_.mutable_unknown_fields()));
         break;
       }
     }
@@ -312,7 +313,7 @@ void Backchannel::SerializeWithCachedSizes(
   // optional string LogErrMsg = 2;
   if (cached_has_bits & 0x00000001u) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->logerrmsg().data(), this->logerrmsg().length(),
+      this->logerrmsg().data(), static_cast<int>(this->logerrmsg().length()),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
       "Backchannel.LogErrMsg");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
@@ -321,7 +322,7 @@ void Backchannel::SerializeWithCachedSizes(
 
   if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        unknown_fields(), output);
+        _internal_metadata_.unknown_fields(), output);
   }
   // @@protoc_insertion_point(serialize_end:Backchannel)
 }
@@ -343,7 +344,7 @@ void Backchannel::SerializeWithCachedSizes(
   // optional string LogErrMsg = 2;
   if (cached_has_bits & 0x00000001u) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->logerrmsg().data(), this->logerrmsg().length(),
+      this->logerrmsg().data(), static_cast<int>(this->logerrmsg().length()),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
       "Backchannel.LogErrMsg");
     target =
@@ -353,7 +354,7 @@ void Backchannel::SerializeWithCachedSizes(
 
   if (_internal_metadata_.have_unknown_fields()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        unknown_fields(), target);
+        _internal_metadata_.unknown_fields(), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:Backchannel)
   return target;
@@ -366,7 +367,7 @@ size_t Backchannel::ByteSizeLong() const {
   if (_internal_metadata_.have_unknown_fields()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        unknown_fields());
+        _internal_metadata_.unknown_fields());
   }
   // required .Backchannel.MsgType type = 1;
   if (has_type()) {
@@ -446,11 +447,12 @@ void Backchannel::Swap(Backchannel* other) {
   InternalSwap(other);
 }
 void Backchannel::InternalSwap(Backchannel* other) {
+  using std::swap;
   logerrmsg_.Swap(&other->logerrmsg_);
-  std::swap(type_, other->type_);
-  std::swap(_has_bits_[0], other->_has_bits_[0]);
+  swap(type_, other->type_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  std::swap(_cached_size_, other->_cached_size_);
+  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata Backchannel::GetMetadata() const {

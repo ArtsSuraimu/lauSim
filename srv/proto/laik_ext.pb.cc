@@ -16,7 +16,10 @@
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
-class laik_ext_msgDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<laik_ext_msg> {
+class laik_ext_msgDefaultTypeInternal {
+public:
+ ::google::protobuf::internal::ExplicitlyConstructed<laik_ext_msg>
+     _instance;
 } _laik_ext_msg_default_instance_;
 
 namespace protobuf_laik_5fext_2eproto {
@@ -29,20 +32,20 @@ namespace {
 }  // namespace
 
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTableField
-    const TableStruct::entries[] = {
+    const TableStruct::entries[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   {0, 0, 0, ::google::protobuf::internal::kInvalidMask, 0, 0},
 };
 
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::AuxillaryParseTableField
-    const TableStruct::aux[] = {
+    const TableStruct::aux[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   ::google::protobuf::internal::AuxillaryParseTableField(),
 };
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
-    TableStruct::schema[] = {
-  { NULL, NULL, 0, -1, -1, false },
+    TableStruct::schema[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+  { NULL, NULL, 0, -1, -1, -1, -1, NULL, false },
 };
 
-const ::google::protobuf::uint32 TableStruct::offsets[] = {
+const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(laik_ext_msg, _has_bits_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(laik_ext_msg, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -53,8 +56,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] = {
   ~0u,
   ~0u,
 };
-
-static const ::google::protobuf::internal::MigrationSchema schemas[] = {
+static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   { 0, 7, sizeof(laik_ext_msg)},
 };
 
@@ -84,26 +86,22 @@ void protobuf_RegisterTypes(const ::std::string&) {
 }
 
 }  // namespace
-
-void TableStruct::Shutdown() {
-  _laik_ext_msg_default_instance_.Shutdown();
-  delete file_level_metadata[0].reflection;
-}
-
 void TableStruct::InitDefaultsImpl() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::internal::InitProtobufDefaults();
-  _laik_ext_msg_default_instance_.DefaultConstruct();
-}
+  _laik_ext_msg_default_instance_._instance.DefaultConstruct();
+  ::google::protobuf::internal::OnShutdownDestroyMessage(
+      &_laik_ext_msg_default_instance_);}
 
 void InitDefaults() {
   static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
   ::google::protobuf::GoogleOnceInit(&once, &TableStruct::InitDefaultsImpl);
 }
+namespace {
 void AddDescriptorsImpl() {
   InitDefaults();
-  static const char descriptor[] = {
+  static const char descriptor[] GOOGLE_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
       "\n\016laik_ext.proto\":\n\014laik_ext_msg\022\025\n\rfail"
       "ing_nodes\030\002 \003(\t\022\023\n\013spare_nodes\030\004 \003(\t"
   };
@@ -111,14 +109,14 @@ void AddDescriptorsImpl() {
       descriptor, 76);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "laik_ext.proto", &protobuf_RegisterTypes);
-  ::google::protobuf::internal::OnShutdown(&TableStruct::Shutdown);
 }
+} // anonymous namespace
 
 void AddDescriptors() {
   static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
   ::google::protobuf::GoogleOnceInit(&once, &AddDescriptorsImpl);
 }
-// Force AddDescriptors() to be called at static initialization time.
+// Force AddDescriptors() to be called at dynamic initialization time.
 struct StaticDescriptorInitializer {
   StaticDescriptorInitializer() {
     AddDescriptors();
@@ -191,6 +189,10 @@ laik_ext_msg* laik_ext_msg::New(::google::protobuf::Arena* arena) const {
 
 void laik_ext_msg::Clear() {
 // @@protoc_insertion_point(message_clear_start:laik_ext_msg)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   failing_nodes_.Clear();
   spare_nodes_.Clear();
   _has_bits_.Clear();
@@ -210,12 +212,12 @@ bool laik_ext_msg::MergePartialFromCodedStream(
       // repeated string failing_nodes = 2;
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u)) {
+            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->add_failing_nodes()));
           ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
             this->failing_nodes(this->failing_nodes_size() - 1).data(),
-            this->failing_nodes(this->failing_nodes_size() - 1).length(),
+            static_cast<int>(this->failing_nodes(this->failing_nodes_size() - 1).length()),
             ::google::protobuf::internal::WireFormat::PARSE,
             "laik_ext_msg.failing_nodes");
         } else {
@@ -227,12 +229,12 @@ bool laik_ext_msg::MergePartialFromCodedStream(
       // repeated string spare_nodes = 4;
       case 4: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u)) {
+            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->add_spare_nodes()));
           ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
             this->spare_nodes(this->spare_nodes_size() - 1).data(),
-            this->spare_nodes(this->spare_nodes_size() - 1).length(),
+            static_cast<int>(this->spare_nodes(this->spare_nodes_size() - 1).length()),
             ::google::protobuf::internal::WireFormat::PARSE,
             "laik_ext_msg.spare_nodes");
         } else {
@@ -243,13 +245,11 @@ bool laik_ext_msg::MergePartialFromCodedStream(
 
       default: {
       handle_unusual:
-        if (tag == 0 ||
-            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+        if (tag == 0) {
           goto success;
         }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, mutable_unknown_fields()));
+              input, tag, _internal_metadata_.mutable_unknown_fields()));
         break;
       }
     }
@@ -272,7 +272,7 @@ void laik_ext_msg::SerializeWithCachedSizes(
   // repeated string failing_nodes = 2;
   for (int i = 0, n = this->failing_nodes_size(); i < n; i++) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->failing_nodes(i).data(), this->failing_nodes(i).length(),
+      this->failing_nodes(i).data(), static_cast<int>(this->failing_nodes(i).length()),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
       "laik_ext_msg.failing_nodes");
     ::google::protobuf::internal::WireFormatLite::WriteString(
@@ -282,7 +282,7 @@ void laik_ext_msg::SerializeWithCachedSizes(
   // repeated string spare_nodes = 4;
   for (int i = 0, n = this->spare_nodes_size(); i < n; i++) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->spare_nodes(i).data(), this->spare_nodes(i).length(),
+      this->spare_nodes(i).data(), static_cast<int>(this->spare_nodes(i).length()),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
       "laik_ext_msg.spare_nodes");
     ::google::protobuf::internal::WireFormatLite::WriteString(
@@ -291,7 +291,7 @@ void laik_ext_msg::SerializeWithCachedSizes(
 
   if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        unknown_fields(), output);
+        _internal_metadata_.unknown_fields(), output);
   }
   // @@protoc_insertion_point(serialize_end:laik_ext_msg)
 }
@@ -306,7 +306,7 @@ void laik_ext_msg::SerializeWithCachedSizes(
   // repeated string failing_nodes = 2;
   for (int i = 0, n = this->failing_nodes_size(); i < n; i++) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->failing_nodes(i).data(), this->failing_nodes(i).length(),
+      this->failing_nodes(i).data(), static_cast<int>(this->failing_nodes(i).length()),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
       "laik_ext_msg.failing_nodes");
     target = ::google::protobuf::internal::WireFormatLite::
@@ -316,7 +316,7 @@ void laik_ext_msg::SerializeWithCachedSizes(
   // repeated string spare_nodes = 4;
   for (int i = 0, n = this->spare_nodes_size(); i < n; i++) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->spare_nodes(i).data(), this->spare_nodes(i).length(),
+      this->spare_nodes(i).data(), static_cast<int>(this->spare_nodes(i).length()),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
       "laik_ext_msg.spare_nodes");
     target = ::google::protobuf::internal::WireFormatLite::
@@ -325,7 +325,7 @@ void laik_ext_msg::SerializeWithCachedSizes(
 
   if (_internal_metadata_.have_unknown_fields()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        unknown_fields(), target);
+        _internal_metadata_.unknown_fields(), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:laik_ext_msg)
   return target;
@@ -338,7 +338,7 @@ size_t laik_ext_msg::ByteSizeLong() const {
   if (_internal_metadata_.have_unknown_fields()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        unknown_fields());
+        _internal_metadata_.unknown_fields());
   }
   // repeated string failing_nodes = 2;
   total_size += 1 *
@@ -412,11 +412,12 @@ void laik_ext_msg::Swap(laik_ext_msg* other) {
   InternalSwap(other);
 }
 void laik_ext_msg::InternalSwap(laik_ext_msg* other) {
+  using std::swap;
   failing_nodes_.InternalSwap(&other->failing_nodes_);
   spare_nodes_.InternalSwap(&other->spare_nodes_);
-  std::swap(_has_bits_[0], other->_has_bits_[0]);
+  swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  std::swap(_cached_size_, other->_cached_size_);
+  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata laik_ext_msg::GetMetadata() const {
