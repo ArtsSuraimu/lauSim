@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#include <lausim/logger.h>
 #include "random.h"
 
 int num = -1;
@@ -10,6 +12,7 @@ mynode **nodes;
 int num_fault;
 fault **faults;
 
+logger *logg;
 size_t id;
 
 int get_nodes(size_t *num_nodes, node ***lau_nodes) {
@@ -82,29 +85,33 @@ fault_manager *get_fm() {
 
 int init(const plugin_manager_interface *inter, int argc, char **argv) {
     int i;
+    char buf[512];
+    logg = inter->get_logger();
 
     if (inter->version != PL_INTF_VERSION) {
-        printf("[RANDOM] Plugin interface version missmatch\n");
+        logg->log_fun(LL_Error, "[RANDOM] Plugin interface version missmatch");
         return 1;
     }
 
     for (int n = 0; n < argc; n++) {
-        printf("[RANDOM] Arg #%d: %s\n", n, argv[n]);
+        snprintf(buf, sizeof(buf), "[RANDOM] Arg #%d: %s", n, argv[n]);
+        logg->log_fun(LL_Debug, buf);
     }
 
     if (argc < 1) {
-        printf("[FATAL] No node number is specifyed\n");
+        logg->log_fun(LL_Error, "[RANDOM] No node number is specifyed");
         return -1;
     }
 
     num = strtol(argv[0], NULL, 0);
 
     if (num < 0) {
-        printf("[FATAL] [RANDOM] invalid number of nodes\n");
+        logg->log_fun(LL_Error, "[RANDOM] invalid number of nodes");
         return -1;
     }
 
-    printf("[DEBUG] creating %d nodes\n", num);
+    snprintf(buf, sizeof(buf), "[RANDOM] creating %d nodes", num);
+    logg->log_fun(LL_Debug, buf);
 
     nodes = calloc(num, sizeof(node*));
     for (i = 0; i < num; i++) {
