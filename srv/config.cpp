@@ -51,25 +51,25 @@ int get_token_identifyer(const std::string &tk) {
     return none_id;
 }
 
-int config::set_config(int id, std::stringstream &stream, plugin_manager &manager){
+int config::set_config(int id, std::stringstream &stream, plugin_manager *manager){
     std::string value;
     plugin *plugin;
 
     if (!(stream >> value) || value != "="){
-        manager.logger_used->log_fun(LL_Error, "'=' expected in assignment");
+        manager->logger_used->log_fun(LL_Error, "'=' expected in assignment");
         return -1;
     }
 
     if (!(stream >> value)) {
-        manager.logger_used->log_fun(LL_Error, "expected assignment before end of line");
+        manager->logger_used->log_fun(LL_Error, "expected assignment before end of line");
         return -1;
     }
 
     if (id != tic_id)
-        plugin = manager.get_by_name(value.c_str());
+        plugin = manager->get_by_name(value.c_str());
 
     if (id != tic_id && plugin == nullptr) {
-        manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + value + std::string("\" is not loaded")).c_str());
+        manager->logger_used->log_fun(LL_Error, (std::string("plugin \"") + value + std::string("\" is not loaded")).c_str());
         return -1;
     }
 
@@ -77,11 +77,11 @@ int config::set_config(int id, std::stringstream &stream, plugin_manager &manage
     case com_all_id:
     case com_actor_id:
         if (com_actor != nullptr)
-            manager.logger_used->log_fun(LL_Warning, "com actor is reassigned");
+            manager->logger_used->log_fun(LL_Warning, "com actor is reassigned");
         if (HAS_PL_TYPE(*plugin, PL_COM_ACTOR))
             com_actor = plugin;
         else {
-            manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a com plugin")).c_str());
+            manager->logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a com plugin")).c_str());
             return -1;
         }
         if (id == com_actor_id)
@@ -89,43 +89,43 @@ int config::set_config(int id, std::stringstream &stream, plugin_manager &manage
         /* fall through */
     case com_notify_id:
         if (com_notify != nullptr)
-            manager.logger_used->log_fun(LL_Warning, "com notify is reassigned");
+            manager->logger_used->log_fun(LL_Warning, "com notify is reassigned");
         if (HAS_PL_TYPE(*plugin, PL_COM_EXTERN))
             com_notify = plugin;
         else {
-            manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a com plugin")).c_str());
+            manager->logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a com plugin")).c_str());
             return -1;
         }
         break;
     case logger_id:
         if (logger != nullptr)
-            manager.logger_used->log_fun(LL_Warning, "logger is reassigned");
+            manager->logger_used->log_fun(LL_Warning, "logger is reassigned");
         if (HAS_PL_TYPE(*plugin, PL_LOGGER))
             logger = plugin;
         else {
-            manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a logger plugin")).c_str());
+            manager->logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a logger plugin")).c_str());
             return -1;
         }
         break;
     case manager_id:
         if (this->manager != nullptr)
-            manager.logger_used->log_fun(LL_Warning, "fault manager is reassigned");
+            manager->logger_used->log_fun(LL_Warning, "fault manager is reassigned");
         if (HAS_PL_TYPE(*plugin, PL_FAULT_MANAGER))
             this->manager = plugin;
         else {
-            manager.logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a fault manager plugin")).c_str());
+            manager->logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a fault manager plugin")).c_str());
             return -1;
         }
         break;
     case tic_id:
         if (tic_length != 0)
-            manager.logger_used->log_fun(LL_Warning, "tic length is reassigned");
+            manager->logger_used->log_fun(LL_Warning, "tic length is reassigned");
         tic_length = std::stoul(value);
     }
     return 0;
 }
 
-int config::load_lib(const std::string &name, std::stringstream &args, plugin_manager &manager) {
+int config::load_lib(const std::string &name, std::stringstream &args, plugin_manager *manager) {
     std::vector<std::string> argv;
     char **cargs;
     int retv;
@@ -138,12 +138,12 @@ int config::load_lib(const std::string &name, std::stringstream &args, plugin_ma
         cargs[i] = (char*) argv[i].c_str();
     }
 
-    retv = manager.load_library((char *) name.c_str(), argv.size(), cargs);
+    retv = manager->load_library((char *) name.c_str(), argv.size(), cargs);
     delete[] cargs;
     return retv;
 }
 
-int config::load_config(char *filename, plugin_manager &manager) {
+int config::load_config(char *filename, plugin_manager *manager) {
     uint8_t state = 0;
     std::string line;
     std::ifstream conf_file;
@@ -151,7 +151,7 @@ int config::load_config(char *filename, plugin_manager &manager) {
     conf_file.open(filename, std::ios::in);
 
     if (!conf_file.is_open()) {
-        manager.logger_used->log_fun(LL_Error, "unable to open configuration file!");
+        manager->logger_used->log_fun(LL_Error, "unable to open configuration file!");
         return -1;
     }
 
@@ -160,7 +160,7 @@ int config::load_config(char *filename, plugin_manager &manager) {
         std::string token;
         int id;
 
-        manager.logger_used->log_fun(LL_Debug, (std::string("Line: ") + line).c_str());
+        manager->logger_used->log_fun(LL_Debug, (std::string("Line: ") + line).c_str());
         // skip empty lines
         if (line.empty())
             continue;

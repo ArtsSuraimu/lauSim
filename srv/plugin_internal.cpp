@@ -6,76 +6,53 @@
 #include <functional>
 #include <algorithm>
 #include <cstring>
+#include <cstdlib>
 #include <iostream>
+#include <sstream>
 
 #include <lausim/logger.h>
 #include <lausim/plugin.h>
+#include "stdoutLog.h"
 #include "plugin_internal.h"
 
 using namespace lauSim;
 
-log_level ll_min = LL_None;
+plugin_manager *instance = nullptr;
 
-void log_stdout(log_level l, const char *str) {
-    const char * prefix;
+plugin_manager *plugin_manager::get_instance() {
+    if (instance != nullptr)
+        return instance;
 
-    if (l < ll_min)
-        return;
-
-    switch (l) {
-    default:
-    case LL_None:
-        prefix = "[NONE] ";
-        break;
-    case LL_Debug:
-        prefix = "[DEBUG]";
-        break;
-    case LL_Info:
-        prefix = "[INFO] ";
-        break;
-    case LL_Warning:
-        prefix = "[WARN] ";
-        break;
-    case LL_Error:
-        prefix = "[ERROR]";
-        break;
-    case LL_Fatal:
-        prefix = "[FATAL]";
-        break;
-    }
-
-    std::cerr << prefix << " " << str << std::endl;
+    instance = new plugin_manager();
+    return instance;
 }
-
-void set_min_log_level(log_level l) {
-    ll_min = l;
-}
-
-logger standard_log = {
-    2,
-    set_min_log_level,
-    log_stdout
-};
-
-std::function<int (plugin*)> register_plugin_fwd = [](plugin*) {return -1;};
-std::function<plugin *(const char *)> by_name_fwd = [](const char*){return nullptr;};
-std::function<plugin *(plugin_type_t)> by_type_fwd = [](plugin_type_t){return nullptr;};
-std::function<logger *()> get_logger_fwd = [](){return &standard_log;};
 
 int register_plugin_c(plugin *p) {
-    return register_plugin_fwd(p);
+    return instance->register_plugin(p);
 }
 
 plugin *by_name_c(const char *name) {
-    return by_name_fwd(name);
+    return instance->get_by_name(name);
 }
 
 plugin *by_type_c(plugin_type_t pt) {
-    return by_type_fwd(pt);
+    return instance->get_by_type(pt);
 }
 
 logger *get_logger() {
-    return get_logger_fwd();
+    return instance->logger_used;
+}
+
+unsigned get_all_plugins(pl_role **p) {
+    return instance->all_plugins(p);
+}
+
+int man_set_role(plugin *p, plugin_type_t nr) {
+    return instance->set_role(p, nr);
+}
+
+int man_add_role(plugin *p, plugin_type_t nr) {
+    return instance->add_role(p, nr);
 }
 
 const plugin_manager_interface interface = {
@@ -83,18 +60,33 @@ const plugin_manager_interface interface = {
     register_plugin_c,
     by_name_c,
     by_type_c,
-    get_logger
+    get_logger,
+    get_all_plugins,
+    man_set_role,
+    man_add_role
 };
 
 int plugin_manager::init() {
     if (is_init)
         return -1;
     logger_used = &standard_log;
-    register_plugin_fwd = [this](plugin *p){return this->register_plugin(p);};
-    by_name_fwd = [this](const char *name) {return this->get_by_name(name);};
-    by_type_fwd = [this](plugin_type_t type) {return this->get_by_type(type);};
-    get_logger_fwd = [this]() {return logger_used;};
     is_init = true;
+    return 0;
+}
+
+int plugin_manager::set_role(plugin *pl, plugin_type_t new_role) {
+    if (pl == nullptr || (pl->pl_type & new_role) != new_role)
+        return -1;
+
+    plugins.at(pl) = new_role;
+    return 0;
+}
+
+int plugin_manager::add_role(plugin *pl, plugin_type_t new_role) {
+    if (pl == nullptr || (pl->pl_type & new_role) != new_role)
+        return -1;
+    
+    plugins.at(pl) |= new_role;
     return 0;
 }
 
@@ -132,35 +124,50 @@ int plugin_manager::load_library(char *file, int argc, char **argv) {
     return 0;
 }
 
+unsigned plugin_manager::all_plugins(pl_role **pl) {
+    unsigned i = 0;
+    pl_role *roles = (pl_role *) calloc(sizeof(pl_role), plugins.size());
+    
+    for (auto plu: plugins) {
+        roles[i].role = plu.second;
+        roles[i++].pl = plu.first;
+    }
+
+    *pl = roles;
+    return i;
+}
+
 int plugin_manager::register_plugin(plugin *p){
-    std::cout << "[DEBUG] trying to register new plugin " << p->name << std::endl;
-    if (this->get_by_name(p->name) != nullptr)
+    std::stringstream str;
+    str << "trying to register new plugin " << p->name;
+    logger_used->log_fun(LL_Debug, str.str().c_str());
+    if (this->get_by_name(p->name) != nullptr || plugins.find(p) != plugins.end())
         return -1;
-    plugins.push_back(p);
+    plugins.emplace(p, PL_NONE);
     return 0;
 }
 
 plugin* plugin_manager::get_by_name(const char *name) {
     auto pos = std::find_if(plugins.begin(), plugins.end()
-                            , [name](plugin *p){return 0 == strcmp(name, p->name);});
+                            , [name](std::pair<plugin*, plugin_type_t> info){return 0 == strcmp(name, info.first->name);});
     if (pos == plugins.end())
         return nullptr;
-    else return *pos;
+    else return pos->first;
 }
 
 plugin* plugin_manager::get_by_type(plugin_type_t type) {
     auto pos = std::find_if(plugins.begin(), plugins.end()
-                            , [type](plugin *p){return (p->pl_type & type) == type;});
+                            , [type](std::pair<plugin*, plugin_type_t> info){return (info.second & type) == type;});
     if (pos == plugins.end())
         return nullptr;
-    else return *pos;
+    else return pos->first;
 }
 
 void plugin_manager::cleanup() {
     int i;
-    for (plugin *p: plugins) {
-        if (p->cleanup != nullptr)
-            p->cleanup();
+    for (auto &p: plugins) {
+        if (p.first->cleanup != nullptr)
+            p.first->cleanup();
     }
 
     for (std::unique_ptr<library> &lib: libraries) {

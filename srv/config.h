@@ -21,11 +21,17 @@ namespace lauSim {
 #define com_all_id 0x104
 #define tic_id 0x105
 
+enum backChType {
+    BC_NONE,
+    BC_SYNC,
+    BC_ASYNC
+};
+
 class config {
 public:
-    int load_config(char * filename, plugin_manager &manager);
-    int set_config(int id, std::stringstream &, plugin_manager &);
-    int load_lib(const std::string &, std::stringstream &, plugin_manager &);
+    int load_config(char * filename, plugin_manager *manager);
+    int set_config(int id, std::stringstream &, plugin_manager *);
+    int load_lib(const std::string &, std::stringstream &, plugin_manager *);
     plugin *com_actor = nullptr;
     plugin *com_notify = nullptr;
     plugin *manager = nullptr;

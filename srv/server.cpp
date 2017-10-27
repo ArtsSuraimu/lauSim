@@ -27,7 +27,7 @@ std::chrono::nanoseconds duration;
 
 // configuration
 
-plugin_manager plugins;
+plugin_manager *plugins;
 fault_manager *manager;
 com *com_actor;
 com *com_notify;
@@ -68,12 +68,13 @@ void update_log_level (unsigned new_ll) {
         ll = LL_Fatal;
         break;
     }
-    plugins.logger_used->set_ll(ll);
+    plugins->logger_used->set_ll(ll);
 }
 
 int init(unsigned loglevel) {
 
-    if (plugins.init()){ 
+    plugins = plugin_manager::get_instance();
+    if (plugins->init()){ 
         // since the plugin manager has not been properly initialize, there is no logger available
         std::cout << "[FATAL] unable to initialize plugin system" << std::endl;
         return 1;
@@ -83,24 +84,24 @@ int init(unsigned loglevel) {
     update_log_level(loglevel);
 
     if (conf.load_config(cfile, plugins)){
-        plugins.logger_used->log_fun(LL_Fatal, "error while loading config");
+        plugins->logger_used->log_fun(LL_Fatal, "error while loading config");
         return 1;
     }
 
     if (conf.logger != nullptr) {
-        plugins.logger_used = conf.logger->lf();
+        plugins->logger_used = conf.logger->lf();
         update_log_level(loglevel);
     }
     
-    plugins.logger_used->log_fun(LL_Debug, "config loaded successfully");
+    plugins->logger_used->log_fun(LL_Debug, "config loaded successfully");
 
     // all plugins have been loaded, run post init hooks now
 
-    for (plugin *p: plugins.plugins) {
-        if (p->post_init == nullptr)
+    for (auto &plu: plugins->plugins) {
+        if (plu.first->post_init == nullptr)
             continue;
-        if (p->post_init() != 0) {
-            plugins.logger_used->log_fun(LL_Fatal, (std::string("error calling post init hook for ") + std::string(p->name)).c_str());
+        if (plu.first->post_init() != 0) {
+            plugins->logger_used->log_fun(LL_Fatal, (std::string("error calling post init hook for ") + std::string(plu.first->name)).c_str());
             return 1;
         }
     }
@@ -110,7 +111,7 @@ int init(unsigned loglevel) {
             conf.com_notify == nullptr ||
             conf.manager == nullptr ||
             conf.tic_length == 0){
-        plugins.logger_used->log_fun(LL_Fatal, "configuration incomplete");
+        plugins->logger_used->log_fun(LL_Fatal, "configuration incomplete");
         return 1;
     }
 
@@ -119,7 +120,7 @@ int init(unsigned loglevel) {
 
     manager = conf.manager->fm();
     if (manager->get_nodes(&num_nodes, &nodes)) {
-        plugins.logger_used->log_fun(LL_Fatal, "unable to get nodes");
+        plugins->logger_used->log_fun(LL_Fatal, "unable to get nodes");
         return 1;
     }
 
@@ -140,7 +141,7 @@ void skip_to_end_of_tic() {
         skip++;
 
     if (skip) 
-        plugins.logger_used->log_fun(LL_Warning, (std::to_string(skip) + std::string(" tics skipped - increase tic time?")).c_str());
+        plugins->logger_used->log_fun(LL_Warning, (std::to_string(skip) + std::string(" tics skipped - increase tic time?")).c_str());
     
     std::this_thread::sleep_until(timestamp);
 }
@@ -178,7 +179,12 @@ int main(int argc, char **argv) {
     if (init(loglevel))
         return 1;
 
-    plugins.logger_used->log_fun(LL_Info, "initialization complete");
+    plugins->add_role(conf.com_actor, PL_COM_ACTOR);
+    plugins->add_role(conf.com_notify, PL_COM_EXTERN);
+    plugins->add_role(conf.logger, PL_LOGGER);
+    plugins->add_role(conf.manager, PL_FAULT_MANAGER);
+
+    plugins->logger_used->log_fun(LL_Info, "initialization complete");
 
     while(!termreq) {
         manager->tic();
@@ -186,14 +192,14 @@ int main(int argc, char **argv) {
 
         if (num_failed) {
             snprintf(buf, sizeof(buf), "Tic #%lu", tic_num);
-            plugins.logger_used->log_fun(LL_Info, buf);
+            plugins->logger_used->log_fun(LL_Info, buf);
             fail_msg.Clear();
 
             for (i = 0; i < num_failed ; i++) {
                 com_actor->notify_fail(failed[i]->node, failed[i]->component, failed[i]->severity);
                 if (failed[i]->component == NULL) {
                     snprintf(buf, sizeof(buf), "Node %s %s", failed[i]->node, (failed[i]->severity) ? "failed" : "recovered");
-                    plugins.logger_used->log_fun(LL_Info, buf);
+                    plugins->logger_used->log_fun(LL_Info, buf);
 
                     // send fail message
                     if (failed[i]->severity == 0) {
@@ -201,9 +207,6 @@ int main(int argc, char **argv) {
                     } else {
                         fail_msg.add_failing_nodes(failed[i]->node, strlen(failed[i]->node));
                     }
-
-                    //com_notify->notify_extern(buf, msg_len);
-                    // TODO send fail via com
                 }
             }
 
@@ -216,6 +219,6 @@ int main(int argc, char **argv) {
     }
 
     google::protobuf::ShutdownProtobufLibrary();
-    plugins.logger_used->log_fun(LL_Info, "cleaning up");
-    plugins.cleanup();
+    plugins->logger_used->log_fun(LL_Info, "cleaning up");
+    plugins->cleanup();
 }

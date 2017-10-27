@@ -14,18 +14,20 @@
 #include <lausim/fault_manager.h>
 //#include <lausim/types.h>
 
-#define PL_INTF_VERSION 4
+#define PL_INTF_VERSION 5
 
 #ifdef __cplusplus
 namespace lauSim {
 extern "C" {
 #endif
 
+#define PL_NONE 0
 #define PL_COM_ACTOR 1
 #define PL_COM_EXTERN 2
 #define PL_FAULT_MANAGER 4
 #define PL_LOGGER 8
 #define PL_TOPOLOGY 16
+#define PL_OTHER 32
 
 #define SET_PL_TYPE(pl,t) ((pl).pl_type |= t)
 #define HAS_PL_TYPE(pl,t) ((pl).pl_type & t)
@@ -42,12 +44,20 @@ typedef struct tag_plugin{
     get_logger_fun lf;
 } plugin;
 
+typedef struct tag_pl_role{
+    plugin_type_t role;
+    plugin *pl;
+} pl_role;
+
 typedef struct {
     int version;
     int (*register_plugin) (plugin *);
     plugin *(*by_name) (const char *name);
     plugin *(*by_type) (plugin_type_t type);
     logger *(*get_logger) ();
+    unsigned (*all_plugins) (pl_role **pl);
+    int (*set_role) (plugin *, plugin_type_t new_role);
+    int (*add_role) (plugin *, plugin_type_t new_role);
 } plugin_manager_interface;
 
 typedef int (*init_fun) (const plugin_manager_interface*, int argc, char **argv);
