@@ -143,7 +143,7 @@ int config::load_lib(const std::string &name, std::stringstream &args, plugin_ma
     return retv;
 }
 
-int config::load_config(char *filename, plugin_manager *manager) {
+int config::load_config(const char *filename, plugin_manager *manager) {
     uint8_t state = 0;
     std::string line;
     std::ifstream conf_file;

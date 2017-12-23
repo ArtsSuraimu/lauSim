@@ -3,8 +3,10 @@ project(lauSim VERSION 0.1 LANGUAGES C CXX)
 
 include(GNUInstallDirs)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -pedantic -g -Wno-unused-parameter")
-set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -pedantic -g -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -pedantic -Wl,-z,relro,-z,now -fPIE -pie -fstack-protector-strong -g -Wno-unused-parameter")
+set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -pedantic -Wl,-z,relro,-z,now -fPIE -pie -fstack-protector-strong -g -Wno-unused-parameter")
+
+add_subdirectory(client)
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
 file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp"

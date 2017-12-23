@@ -29,7 +29,7 @@ enum backChType {
 
 class config {
 public:
-    int load_config(char * filename, plugin_manager *manager);
+    int load_config(const char * filename, plugin_manager *manager);
     int set_config(int id, std::stringstream &, plugin_manager *);
     int load_lib(const std::string &, std::stringstream &, plugin_manager *);
     plugin *com_actor = nullptr;

@@ -5,4 +5,4 @@
 [config]
 com = echo
 fault = random
-tic = 1000000000
+tic = 200000

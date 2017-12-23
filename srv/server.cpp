@@ -14,6 +14,7 @@
 
 #include <lausim/plugin.h>
 #include <lausim/node.h>
+#include "options.h"
 #include "plugin_internal.h"
 #include "config.h"
 #include "proto/laik_ext.pb.h"
@@ -38,9 +39,8 @@ node **nodes;
 
 // initialization
 
-char *cfile = nullptr;
-char optstr[] = "c:l:";
 volatile std::sig_atomic_t termreq;
+Options opts;
 
 void term_handler(int signal){
     termreq = 1;
@@ -83,7 +83,7 @@ int init(unsigned loglevel) {
     // plugin manager has been initialized, from now on logger_used is set
     update_log_level(loglevel);
 
-    if (conf.load_config(cfile, plugins)){
+    if (conf.load_config(opts.cfile.c_str(), plugins)){
         plugins->logger_used->log_fun(LL_Fatal, "error while loading config");
         return 1;
     }
@@ -109,8 +109,7 @@ int init(unsigned loglevel) {
     // check if the required plugins are configured
     if (conf.com_actor == nullptr ||
             conf.com_notify == nullptr ||
-            conf.manager == nullptr ||
-            conf.tic_length == 0){
+            conf.manager == nullptr){
         plugins->logger_used->log_fun(LL_Fatal, "configuration incomplete");
         return 1;
     }
@@ -137,6 +136,9 @@ int init(unsigned loglevel) {
 void skip_to_end_of_tic() {
     unsigned skip = 0;
 
+    if (conf.tic_length == 0)
+        return;
+
     for (timestamp += duration; timestamp < std::chrono::high_resolution_clock::now(); timestamp += duration)
         skip++;
 
@@ -146,37 +148,52 @@ void skip_to_end_of_tic() {
     std::this_thread::sleep_until(timestamp);
 }
 
-int main(int argc, char **argv) {
+void manage_fails(unsigned long tic) {
     char buf[512];
-    int opt;
     std::string protoStrBuf;
-    unsigned loglevel = 0;
     laik_ext_msg fail_msg;
     fault **failed;
     int i, num_failed;
-    unsigned long tic_num = 0;
 
-    // read command line options
-    while((opt = getopt(argc, argv, optstr)) > 0) {
-        switch(opt) {
-        case 'c':
-            cfile = optarg;
-            break;
-        case 'l':
-            loglevel = (unsigned) strtoul(optarg, NULL, 0);
-            break;
-        default:
-            std::cerr << "unrecognized option '" << (char) opt << "'" << std::endl;
-            return -1;
+    num_failed = manager->get_fail(&failed);
+
+    if (num_failed) {
+        snprintf(buf, sizeof(buf), "Tic #%lu", tic);
+        plugins->logger_used->log_fun(LL_Info, buf);
+        fail_msg.Clear();
+
+        for (i = 0; i < num_failed ; i++) {
+            com_actor->notify_fail(failed[i]->node, failed[i]->component, failed[i]->severity);
+            if (failed[i]->component == NULL) {
+                snprintf(buf, sizeof(buf), "Node %s %s", failed[i]->node, (failed[i]->severity) ? "failed" : "recovered");
+                plugins->logger_used->log_fun(LL_Info, buf);
+
+                // send fail message
+                if (failed[i]->severity == 0) {
+                    fail_msg.add_spare_nodes(failed[i]->node, strlen(failed[i]->node));
+                } else {
+                    fail_msg.add_failing_nodes(failed[i]->node, strlen(failed[i]->node));
+                }
+            }
         }
-    }
 
-    if (cfile == nullptr) {
+        fail_msg.SerializeToString(&protoStrBuf);
+        com_notify->notify_extern(protoStrBuf.c_str(), protoStrBuf.length());
+    }
+}
+
+int main(int argc, char **argv) {
+    unsigned long tic_num = 0;
+    
+    if (opts.parse(argc, argv) != 0)
+        return -1;
+
+    if (opts.cfile.empty()) {
         std::cout << "usage: " << ((argc > 0) ? argv[0] : "lauSim") << " -c <file>" << std::endl;
         return -1;
     }
 
-    if (init(loglevel))
+    if (init(opts.loglevel))
         return 1;
 
     plugins->add_role(conf.com_actor, PL_COM_ACTOR);
@@ -188,32 +205,7 @@ int main(int argc, char **argv) {
 
     while(!termreq) {
         manager->tic();
-        num_failed = manager->get_fail(&failed);
-
-        if (num_failed) {
-            snprintf(buf, sizeof(buf), "Tic #%lu", tic_num);
-            plugins->logger_used->log_fun(LL_Info, buf);
-            fail_msg.Clear();
-
-            for (i = 0; i < num_failed ; i++) {
-                com_actor->notify_fail(failed[i]->node, failed[i]->component, failed[i]->severity);
-                if (failed[i]->component == NULL) {
-                    snprintf(buf, sizeof(buf), "Node %s %s", failed[i]->node, (failed[i]->severity) ? "failed" : "recovered");
-                    plugins->logger_used->log_fun(LL_Info, buf);
-
-                    // send fail message
-                    if (failed[i]->severity == 0) {
-                        fail_msg.add_spare_nodes(failed[i]->node, strlen(failed[i]->node));
-                    } else {
-                        fail_msg.add_failing_nodes(failed[i]->node, strlen(failed[i]->node));
-                    }
-                }
-            }
-
-            fail_msg.SerializeToString(&protoStrBuf);
-            com_notify->notify_extern(protoStrBuf.c_str(), protoStrBuf.length());
-        }
-
+        manage_fails(tic_num);
         ++tic_num;
         skip_to_end_of_tic();
     }
