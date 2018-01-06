@@ -1,3 +1,19 @@
+/*
+   Copyright 2017 Clemens Jonischkeit
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 #include <iostream>
 #include <sstream>
 #include <cstdio>
@@ -15,7 +31,7 @@
 
 namespace lauSim {
 static bool init_state = false;
-ComMosquitto instance;
+ComMosquitto *instance = nullptr;
 logger *log;
 
 int notify_fail (const char *, const char *, unsigned);
@@ -23,8 +39,11 @@ int notify_extern (const char *, unsigned);
 plugin_manager_interface* pi;
 
 com com_interface{
+    0,
     notify_fail,   // notify_fail
-    notify_extern  // notify_extern
+    notify_extern,  // notify_extern
+    nullptr,
+    nullptr
 };
 
 int
@@ -36,6 +55,7 @@ ComMosquitto::init_mosquitto() {
             init_state = true;
         
     }
+    log->log_fun(LL_Debug, "MQTT lib initialized");
     return ret;
 }
 
@@ -45,27 +65,22 @@ ComMosquitto::cleanup_mosquitto() {
     if (init_state) {
         ret = mosqpp::lib_cleanup();
     }
+    log->log_fun(LL_Debug, "MQTT lib cleanup");
     return ret;
 }
 
 int ComMosquitto::init(const char * addr, int port, unsigned keep_alive) {
-    char buf[HOST_NAME_MAX + 1];
     int msqerr;
 
     if (is_init || !init_state)
         return -1;
-    log->log_fun(LL_Debug, "MQTT create new client");
-    con = std::unique_ptr<mosqpp::mosquittopp>(new mosqpp::mosquittopp());
-    log->log_fun(LL_Debug, "MQTT new client created");
-    if ((msqerr = con->connect(addr, port, keep_alive))) {
+    log->log_fun(LL_Debug, "MQTT connecting");
+    if ((msqerr = connect(addr, port, keep_alive))) {
         log->log_fun(LL_Error, mosqpp::strerror(msqerr));
         return -1;
     }
     log->log_fun(LL_Debug, "MQTT connected");
-    memset(buf, 0, sizeof(buf));
-    gethostname(buf, sizeof(buf));
-    hostname = std::string(buf);
-    con->will_set(LAST_WILL_TOPIC, strlen(buf), buf);
+    will_set(LAST_WILL_TOPIC, id.length(), id.c_str());
     is_init = true;
     return 0;
 }
@@ -84,7 +99,7 @@ int ComMosquitto::notify_fail(const char *target, const char *cmp, unsigned seve
     msg_buf << "0x" << std::hex << severity;
     msg = msg_buf.str();
     log->log_fun(LL_Debug, "sending msg");
-    if ((msqerr = con->publish(NULL, topic.str().c_str(), msg.length(), msg.c_str()))) {
+    if ((msqerr = publish(NULL, topic.str().c_str(), msg.length(), msg.c_str()))) {
         log->log_fun(LL_Error, mosqpp::strerror(msqerr));
         return -1;
     }
@@ -94,13 +109,26 @@ int ComMosquitto::notify_fail(const char *target, const char *cmp, unsigned seve
 int ComMosquitto::notify_extern(const char *msg, unsigned length) {
     if (!is_init)
         return 1;
-    con->publish(NULL, "envelope/lausim", length, msg);
+    publish(NULL, "envelope/lausim", length, msg);
     return 0;
+}
+
+ComMosquitto::ComMosquitto(const char *id) : mosquittopp(id), is_init(false){
+    this->id = std::string(id);
+}
+
+ComMosquitto::~ComMosquitto() {
+    this->~mosquittopp();
 }
 
 extern "C" int init (const plugin_manager_interface* pli, int argc, char **argv) {
     pi = (plugin_manager_interface*) pli;
     int sc;
+
+    if (argc == 0) {
+        log->log_fun(LL_Error, "MQTT id required");
+        return 1;
+    }
 
     if (pli->version != PL_INTF_VERSION) {
         std::cerr << "[MQTT] Plugin Interface Version Missmatch" << std::endl;
@@ -108,23 +136,23 @@ extern "C" int init (const plugin_manager_interface* pli, int argc, char **argv)
     }
 
     log = pli->get_logger();
-    log->log_fun(LL_Debug, "MQTT start init");
     
     ComMosquitto::init_mosquitto();
-    log->log_fun(LL_Debug, "MQTT lib initialized");
-    
+
+    instance = new ComMosquitto(argv[0]);
+
     switch (argc) {
-        case 0:
-            sc = instance.init();
-            break;
         case 1:
-            sc = instance.init(argv[0]);
+            sc = instance->init();
             break;
         case 2:
-            sc = instance.init(argv[0], strtoul(argv[1], nullptr, 0));
+            sc = instance->init(argv[1]);
+            break;
+        case 3:
+            sc = instance->init(argv[1], strtoul(argv[2], nullptr, 0));
             break;
         default:
-            sc = instance.init(argv[0], strtoul(argv[1], nullptr, 0), strtoul(argv[2], nullptr, 0));
+            sc = instance->init(argv[1], strtoul(argv[2], nullptr, 0), strtoul(argv[3], nullptr, 0));
             break;
     }
 
@@ -133,7 +161,7 @@ extern "C" int init (const plugin_manager_interface* pli, int argc, char **argv)
         return sc;
     }
 
-    log->log_fun(LL_Debug, "MQTT finished");
+    log->log_fun(LL_Debug, "MQTT init finished");
 
     if (pli->register_plugin(&mosquitto_plugin)){
         ComMosquitto::cleanup_mosquitto();
@@ -145,7 +173,10 @@ extern "C" int init (const plugin_manager_interface* pli, int argc, char **argv)
 
 void ComMosquitto::cleanup(){
     if (is_init)
-        con->disconnect();
+        disconnect();
+    if (instance != nullptr)
+        delete instance;
+    
 }
 
 int post_init() {
@@ -154,7 +185,7 @@ int post_init() {
 }
 
 int cleanup() {
-    instance.cleanup();
+    instance->cleanup();
     ComMosquitto::cleanup_mosquitto();
     return 0;
 }
@@ -164,10 +195,10 @@ com *get_com() {
 }
 
 int notify_fail(const char *node, const char *component, unsigned severity) {
-    return instance.notify_fail(node, component, severity);
+    return instance->notify_fail(node, component, severity);
 }
 
 int notify_extern(const char *node, unsigned length) {
-    return instance.notify_extern(node, length);
+    return instance->notify_extern(node, length);
 }
 }
