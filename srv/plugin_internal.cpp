@@ -27,6 +27,7 @@
 #include <iostream>
 #include <sstream>
 
+#include <dlfcn.h>
 #include <lausim/logger.h>
 #include <lausim/plugin.h>
 #include "stdoutLog.h"
@@ -110,12 +111,14 @@ int plugin_manager::add_role(plugin *pl, plugin_type_t new_role) {
 int plugin_manager::load_library(char *file, int argc, char **argv) {
     std::unique_ptr<library> nlib(new library());
     init_fun init;
+    const char *err;
 
     nlib->argc = argc;
     
 
     if (nlib->open(file)){
-        std::cout << "[FATAL] unable to load " << file << std::endl;
+        err = dlerror();
+        std::cout << "[FATAL] unable to load " << file << ": " << err << std::endl;
         return -1;
     }
     

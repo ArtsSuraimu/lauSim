@@ -201,4 +201,6 @@ int notify_fail(const char *node, const char *component, unsigned severity) {
 int notify_extern(const char *node, unsigned length) {
     return instance->notify_extern(node, length);
 }
+
+void ComMosquitto::on_message(const struct mosquitto_message *) {}
 }

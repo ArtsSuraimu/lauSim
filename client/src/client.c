@@ -14,16 +14,44 @@
    limitations under the License.
 */
 
+#define _POSIX_C_SOURCE 199309L
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <interface.h>
+#include <interface_backend.h>
+
+volatile int req_stop = 0;
+
+void handler(int signum) {
+    req_stop = 1;
+}
+
+struct sigaction sigact;
 
 int main(int argc, char **argv) {
     fault *flt;
+    FILE *fifo;
     size_t num, i;
 #if CON == MQTT
     struct mqtt_opt opt;
 #endif
+
+    fifo = fopen(FIFO_FILE, "w");
+    if (fifo == NULL) {
+        perror("fopen");
+        return EXIT_FAILURE;
+    }
+    setvbuf(fifo, NULL, _IOLBF, 0);
+
+    sigact.sa_sigaction = NULL;
+    sigact.sa_handler = handler;
+    sigact.sa_flags = 0;
+    sigact.sa_restorer = NULL;
+    sigemptyset(&sigact.sa_mask);
+    sigaction(SIGTERM, &sigact, NULL);
+    sigaction(SIGINT, &sigact, NULL);
 
 #if CON == MQTT
     if (argc < 4) {
@@ -38,11 +66,22 @@ int main(int argc, char **argv) {
     }
 #endif
 
-    while(1) {
+    while(!req_stop) {
         flt = get_faults(100, &num);
         for (i = 0; i < num; i++) {
             printf("%s failed (%3d)\n", flt[i].component, flt[i].severity);
+            if (flt[i].component == NULL) {
+                fprintf(fifo, "power %d\n", flt[i].severity);
+                continue;
+            } else {
+                fprintf(fifo, "%s %d\n", flt[i].component, flt[i].severity);
+            }
         }
     }
-       
+    
+    // tell the backend to exit
+    fputs("exit\n", fifo);
+    fclose(fifo);
+
+    return EXIT_SUCCESS;
 }

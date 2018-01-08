@@ -1,5 +1,5 @@
 /*
-   Copyright 2017 Clemens Jonischkeit
+   Copyright 2018 Clemens Jonischkeit
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,25 +14,10 @@
    limitations under the License.
 */
 
-#ifndef INTERFACE_H
-#define INTERFACE_H
+#ifndef BACKEND_H
+#define BACKEND_H
 
-#include <stdint.h>
-#include <sys/types.h>
-
-typedef struct fault_s {
-    char *component;
-    unsigned severity;
-} fault;
-
-struct mqtt_opt{
-    char *hostname;
-    uint16_t port;
-};
-
-int init(const char *name, void *opt);
-fault *get_faults(size_t timeout, size_t *num);
-int send_back(uint8_t *buf, size_t len);
-void cleanup(void);
+extern volatile int lauSim_req_close;
+int lauSim_main(int argc, char **argv);
 
 #endif

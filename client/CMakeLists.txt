@@ -18,4 +18,6 @@ add_executable(client_mqtt "${PROJECT_SOURCE_DIR}/client/src/mqtt.c" "${PROJECT_
 target_compile_definitions(client_mqtt PRIVATE -DCON=MQTT)
 TARGET_LINK_LIBRARIES(client_mqtt mosquitto)
 
-add_executable(privileged "${PROJECT_SOURCE_DIR}/client/src/privileged.h" "${PROJECT_SOURCE_DIR}/client/src/privileged.c")
+add_executable(privileged "${PROJECT_SOURCE_DIR}/client/src/backend.c" "${PROJECT_SOURCE_DIR}/client/src/privileged.c")
+add_library(preload SHARED "${PROJECT_SOURCE_DIR}/client/src/backend.c" "${PROJECT_SOURCE_DIR}/client/src/preload.c")
+TARGET_LINK_LIBRARIES(preload pthread)
