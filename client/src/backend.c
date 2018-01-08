@@ -60,6 +60,10 @@ void lauSim_fifo_cleanup() {
     }
 }
 
+void lauSim_backend_cleanup() {
+    lauSim_fifo_cleanup();
+}
+
 int lauSim_main(int argc, char **argv) {
     size_t size = 0;
     char *line = NULL, *cmd_str, *opt_str;
@@ -85,7 +89,7 @@ int lauSim_main(int argc, char **argv) {
         select(lauSim_req_close_fd > fifo_fd ? (lauSim_req_close_fd + 1) : (fifo_fd + 1),
                 &fds, NULL, NULL, NULL);
         if (FD_ISSET(lauSim_req_close_fd, &fds)) {
-            fputs("requested to close", stderr);
+            fputs("requested to close\n", stderr);
             break;
         }
         if (!FD_ISSET(fifo_fd, &fds))
@@ -101,15 +105,17 @@ int lauSim_main(int argc, char **argv) {
         if (strcmp(cmd_str, "exit") == 0)
             break;
 
-        opt_str = strtok(line, " \n");
-        if (opt_str == NULL)
+        opt_str = strtok(NULL, " \n");
+        if (opt_str == NULL) {
+            fprintf(stderr, "empty optstr! (%s)", cmd_str);
             continue;
+        }
         opt = strtoul(opt_str, NULL, 0);
-        if (strcmp(line, "net") == 0)
+        if (strcmp(cmd_str, "net") == 0)
             cmd = SUBSYS_NET;
-        if (strcmp(line, "power") == 0)
+        if (strcmp(cmd_str, "power") == 0)
             cmd = SUBSYS_PWR;
-        if (strcmp(line, "memory") == 0)
+        if (strcmp(cmd_str, "memory") == 0)
             cmd = SUBSYS_MEM;
         lauSim_set_state(cmd, opt);
     }

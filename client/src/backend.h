@@ -19,5 +19,6 @@
 
 extern volatile int lauSim_req_close_fd;
 int lauSim_main(int argc, char **argv);
+void lauSim_backend_cleanup();
 
 #endif

@@ -85,6 +85,7 @@ int lauSim_set_state(enum en_subsys sys, unsigned long severity) {
         res = switch_net(severity);
         break;
     case SUBSYS_PWR:
+        _exit(0);
     case SUBSYS_MEM:
         // TODO implement
         res = 0;

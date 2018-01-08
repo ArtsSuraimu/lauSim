@@ -21,6 +21,7 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <sys/socket.h>
 #include "backend_if.h"
 #include "backend.h"
 
@@ -28,6 +29,10 @@ int lauSim_caps = SUBSYS_NET;
 unsigned long lauSim_net_status = 0;
 pthread_t lauSim_thr;
 int lauSim_hook_is_init = 0;
+pthread_mutex_t lauSim_fds_mutex = PTHREAD_MUTEX_INITIALIZER;
+int *lauSim_sock_fds = NULL;
+unsigned lauSim_num_fds = 0;
+
 
 struct {
     int req_close_fds[2];
@@ -36,8 +41,17 @@ struct {
 } lauSim_hooks;
 
 int lauSim_switch_net(unsigned long severity) {
+    unsigned i;
     if (lauSim_net_status == 0 && severity != 0) {
         // TODO disable network
+        fputs("disabeling network connections\n", stderr);
+        pthread_mutex_lock(&lauSim_fds_mutex);
+        for (i = 0; i < lauSim_num_fds; i++) {
+            shutdown(lauSim_sock_fds[i], SHUT_RDWR);
+        }
+        free(lauSim_sock_fds);
+        lauSim_num_fds = 0;
+        pthread_mutex_unlock(&lauSim_fds_mutex);
         lauSim_net_status = 1;
         return 0;
     }
@@ -68,6 +82,8 @@ int lauSim_set_state(enum en_subsys sys, unsigned long severity) {
         res = lauSim_switch_net(severity);
         break;
     case SUBSYS_PWR:
+        lauSim_backend_cleanup();
+        _exit(0);
     case SUBSYS_MEM:
         // TODO implement
         res = 0;
@@ -99,10 +115,25 @@ void *lauSim_run_main(void *ign) {
 int socket(int domain, int type, int protocol) {
     int ret = lauSim_hooks.socket(domain, type, protocol);
     fprintf(stderr, "opened socket: %d\n", ret);
+    pthread_mutex_lock(&lauSim_fds_mutex);
+    if (ret >= 0 && (domain == AF_INET || domain == AF_INET6)) {
+        lauSim_sock_fds = realloc(lauSim_sock_fds, ++lauSim_num_fds);
+        lauSim_sock_fds[lauSim_num_fds - 1] = ret;
+    }
+    pthread_mutex_unlock(&lauSim_fds_mutex);
     return ret;
 }
 
 int close(int fd) {
+    unsigned i;
+    pthread_mutex_lock(&lauSim_fds_mutex);
+    for (i = 0; i < lauSim_num_fds; ++i) {
+        if (lauSim_sock_fds[i] == fd) {
+            memmove(&lauSim_sock_fds[i], &lauSim_sock_fds[i + 1], sizeof(int) * (--lauSim_num_fds - i));
+            break;
+        }
+    }
+    pthread_mutex_unlock(&lauSim_fds_mutex);
     fprintf(stderr, "closed fd: %d\n", fd);
     return lauSim_hooks.close(fd);
 }
