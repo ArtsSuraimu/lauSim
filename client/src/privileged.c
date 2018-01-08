@@ -18,11 +18,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "backend_if.h"
 #include "backend.h"
 
 int lauSim_caps = SUBSYS_NET;
 unsigned long net_status = 0;
+int lauSim_close_fds[2];
 
 int switch_net(unsigned long severity) {
     if (net_status == 0 && severity != 0) {
@@ -95,5 +97,12 @@ int lauSim_set_state(enum en_subsys sys, unsigned long severity) {
 }
 
 int main(int argc, char **argv) {
+    if (pipe(lauSim_close_fds) < 0) {
+        perror("pipe");
+        return EXIT_FAILURE;
+    }
+    lauSim_req_close_fd = lauSim_close_fds[0];
     lauSim_main(argc, argv);
+    close(lauSim_close_fds[0]);
+    close(lauSim_close_fds[1]);
 }

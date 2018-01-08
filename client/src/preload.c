@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
+#include <unistd.h>
 #include <pthread.h>
 #include "backend_if.h"
 #include "backend.h"
@@ -26,8 +27,10 @@
 int lauSim_caps = SUBSYS_NET;
 unsigned long lauSim_net_status = 0;
 pthread_t lauSim_thr;
+int lauSim_hook_is_init = 0;
 
 struct {
+    int req_close_fds[2];
     int (*socket) (int domain, int type, int protocol);
     int (*close) (int fd);
 } lauSim_hooks;
@@ -93,15 +96,41 @@ void *lauSim_run_main(void *ign) {
     return NULL;
 }
 
+int socket(int domain, int type, int protocol) {
+    int ret = lauSim_hooks.socket(domain, type, protocol);
+    fprintf(stderr, "opened socket: %d\n", ret);
+    return ret;
+}
+
+int close(int fd) {
+    fprintf(stderr, "closed fd: %d\n", fd);
+    return lauSim_hooks.close(fd);
+}
+
 int __attribute__((constructor)) init_hooks() {
+    if (lauSim_hook_is_init)
+        return 0;
+    
+    if (pipe(lauSim_hooks.req_close_fds) < 0) {
+        perror("pipe");
+        return 1;
+    }
+    lauSim_req_close_fd = lauSim_hooks.req_close_fds[0];
     lauSim_hooks.socket = lauSim_resolve("socket");
     lauSim_hooks.close = lauSim_resolve("close");
+    lauSim_hook_is_init = 1;
     pthread_create(&lauSim_thr, NULL, lauSim_run_main, NULL);
     return 0;
 }
 
+int lauSim_init() {
+    return 0;
+}
+
 int __attribute__((destructor)) lauSim_hook_cleanup() {
-    lauSim_req_close = 1;
+    write(lauSim_hooks.req_close_fds[1], "X", 1);
     pthread_join(lauSim_thr, NULL);
+    lauSim_hooks.close(lauSim_hooks.req_close_fds[0]);
+    lauSim_hooks.close(lauSim_hooks.req_close_fds[0]);
     return 0;
 }

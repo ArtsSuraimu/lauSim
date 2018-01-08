@@ -20,4 +20,4 @@ TARGET_LINK_LIBRARIES(client_mqtt mosquitto)
 
 add_executable(privileged "${PROJECT_SOURCE_DIR}/client/src/backend.c" "${PROJECT_SOURCE_DIR}/client/src/privileged.c")
 add_library(preload SHARED "${PROJECT_SOURCE_DIR}/client/src/backend.c" "${PROJECT_SOURCE_DIR}/client/src/preload.c")
-TARGET_LINK_LIBRARIES(preload pthread)
+TARGET_LINK_LIBRARIES(preload pthread dl)

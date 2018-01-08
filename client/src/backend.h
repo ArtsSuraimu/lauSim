@@ -17,7 +17,7 @@
 #ifndef BACKEND_H
 #define BACKEND_H
 
-extern volatile int lauSim_req_close;
+extern volatile int lauSim_req_close_fd;
 int lauSim_main(int argc, char **argv);
 
 #endif
