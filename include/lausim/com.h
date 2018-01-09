@@ -32,21 +32,52 @@ namespace lauSim {
 extern "C" {
 #endif
 
+#define COM_NONE = 0
 #define COM_SYNC = 1
 #define COM_ASYNC = 2
 
 typedef struct {
-    int capabilities;
     /**
-     *  This methode should notify the backend of node
-     *  that a component has failed or degraded
-     *  param node the name of the node that failed
-     *  param component the name of the component that failed
-     *  param severity the severity of the fail (e.g. total fail or just corruptions)
+     * capabilities of the backchannel
+     * 
+     * mode | meaning
+     * :--- | :------
+     * COM_NONE | no backchannel is implemented
+     * COM_SYNC | synchronus backchannel
+     * COM_ASYNC | asynchdonous backchannel, messages will be passed to the registered callback as they are received
+     */
+    int capabilities;
+
+    /**
+     * Notifies the backend of faults that occured
+     * 
+     * @param node the name of the node that failed
+     * @param component the name of the component that failed
+     * @param severity the severity of the fail (e.g. total fail or just corruptions)
+     * @return 0 on success
      */
     int (*notify_fail) (const char *node, const char *component, unsigned severity);
+
+    /**
+     * notifies lauSim of a fault
+     */
     int (*notify_extern) (const char* msg, unsigned len_msg);
+    
+    /**
+     * updates the com mode for the backchannel
+     * 
+     * does not has to be defined by backends that provide no backchannel (capabilities = COM_NONE)
+     * @param the com mode that shall be used (COM_SYNC, COM_ASYNC, COM_NONE)
+     * @return 0 on success
+     */
     int (*set_mode) (int com_mode);
+
+    /**
+     * updates the callback function for the asynchronous backchannel
+     * 
+     * @param on_message function to be called when a message is received
+     * @return the callback that was previously registered
+     */
     void *(*set_callback) (size_t (*on_message)(void **msg_arr, size_t **len_arr));
 } com;
 

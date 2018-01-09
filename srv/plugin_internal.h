@@ -35,17 +35,69 @@ namespace lauSim {
 
 #define plugin_manager_version 1
 
+/**
+ * Handles initializing of and access to plugins
+ */ 
 class plugin_manager {
 public:
+    /**
+     * enforces a singleton pattern so there only exists one plugin manager at a time
+     */
     static plugin_manager *get_instance();
     int init();
+    /**
+     * loads a library potentially containing plugins and calls its init function
+     * 
+     * @param file The shared object to be loaded
+     * @param argc the number of arguments provided to the init function
+     * @param argv the arguments provided to the init functions
+     * @return 0 on success
+     */
     int load_library(char *file, int argc, char **opts);
+    /**
+     * registers a plugin
+     * 
+     * usually called by the init function of a shared object
+     * @param the plugin to be registerd
+     * @return 0 on success
+     */
     int register_plugin(plugin *p);
+    /**
+     * retreive a plugin by name
+     * @return a pointer to the plugin struct on success or a nullptr
+     */
     plugin * get_by_name(const char *name);
+    /**
+     * retreive a plugin by type
+     * 
+     * the type field can be an "or" of different types. The first plugin found that fullfills all mentioned types is returned.
+     * @return a pointer to the plugin struct on success or a nullptr
+     */
     plugin * get_by_type(plugin_type_t type);
+    /**
+     * enumerates all loaded plugins with the role they are currently used in
+     * 
+     * the role is always a subset of type of the plugin
+     * @param pl pointer will be overwritten with a filled array of plugins with attached roles
+     * @return the number of plugins
+     */
     unsigned all_plugins(pl_role **pl);
+    /**
+     * adds a role, a plugin is currently used in
+     * @param p pointer to the plugin struct
+     * @return 0 on success
+     */
     int add_role(plugin *p, plugin_type_t new_role);
+    /**
+     * sets the role a plugin is currently used in
+     * @param p pointer to the plugin struct
+     * @return 0 on sucess
+     */
     int set_role(plugin *p, plugin_type_t new_role);
+    /**
+     * unregisters a plugin
+     * @param name The name of the plugin
+     */
     int unregister_plugin(const char *name);
     void cleanup();
     logger * logger_used;

@@ -28,10 +28,18 @@
 #include <lausim/fault_manager.h>
 #include <lausim/plugin.h>
 
-// extends the lausim node type to attach additional information
+/**
+ * extends the lausim node type to attach additional information
+ */
 typedef struct{
+    /**
+     * bas lauSim node contained in mynode
+     */
     node p;
 
+    /**
+     * an attached health status to track if a node has been disabled yet
+     */
     int healthy;
 } mynode;
 

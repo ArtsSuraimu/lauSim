@@ -27,6 +27,9 @@
 
 namespace lauSim {
 
+/**
+ * used to load plugins and keep them in memory
+ */
 class library {
 public:
     library() = default;
@@ -34,7 +37,17 @@ public:
     library& operator=(library&&) = default;
     library(library&) = delete;
     library& operator=(library&) = delete;
+    
+    /**
+     * opens a plugin (shared object file)
+     * 
+     * for each plugin a new symbol namespace is created resulting in libraries (like libc) beeing loaded multiple times
+     */
     int open(const char *filename);
+
+    /**
+     * resolves a symbol defined by this plugin
+     */
     void *get_sym_addr(const char *symname);
     ~library();
     int argc;

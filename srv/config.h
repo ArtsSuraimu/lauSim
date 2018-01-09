@@ -44,17 +44,28 @@ enum backChType {
     BC_ASYNC
 };
 
+/**
+ * holds the configuration of the server
+ */
 class config {
 public:
+    /**
+     * load the configuration from a configuration file
+     * 
+     * @param filename Name of the file holding the configuration
+     * @retrun 0 on success
+     */
     int load_config(const char * filename, plugin_manager *manager);
-    int set_config(int id, std::stringstream &, plugin_manager *);
-    int load_lib(const std::string &, std::stringstream &, plugin_manager *);
     plugin *com_actor = nullptr;
     plugin *com_notify = nullptr;
     plugin *manager = nullptr;
     plugin *logger = nullptr;
     uint64_t tic_length = 0;
     backChType backCh;
+private:
+    int set_config(int id, std::stringstream &, plugin_manager *);
+    int load_lib(const std::string &, std::stringstream &, plugin_manager *);
+
 };
 
 }

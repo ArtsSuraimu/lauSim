@@ -17,8 +17,20 @@
 #ifndef BACKEND_H
 #define BACKEND_H
 
+/**
+ * an fd that signals the main loop that it should exit.
+ * The program shall terminate if data is available on this fd
+ */
 extern volatile int lauSim_req_close_fd;
+
+/**
+ * main loop of the backend dispatching the update state methodes
+ */
 int lauSim_main(int argc, char **argv);
+
+/**
+ * cleanup of the backend
+ */
 void lauSim_backend_cleanup();
 
 #endif

@@ -20,19 +20,57 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+/**
+ * struct describing a fault
+ */
 typedef struct fault_s {
+    /**
+     * name of the component
+     */
     char *component;
+    /**
+     * the severity of the fault 0 <= severity <= 100
+     */
     unsigned severity;
 } fault;
 
+/**
+ * options to be passed to the mqtt communication backend
+ */
 struct mqtt_opt{
     char *hostname;
     uint16_t port;
 };
 
+/**
+ * initializes the communication backend
+ * 
+ * @param name the name of the node
+ * @return 0 if successfull, 1 if not
+ */
 int init(const char *name, void *opt);
+
+/**
+ * returns a list of faults, waiting for at most timeout ms
+ * 
+ * @param timeout maximum amount of time to wait
+ * @param num returns the number of faults received
+ * @return pointer to an array containing the faults. Gets freed on the next call of this function
+ */
 fault *get_faults(size_t timeout, size_t *num);
+
+/**
+ * sends a message over the back channel to the manager
+ * 
+ * @param buf byte data to be send
+ * @param len number of bytes to be send
+ * @return 0 on success
+ */
 int send_back(uint8_t *buf, size_t len);
+
+/**
+ * cleanup of the communication backend
+ */
 void cleanup(void);
 
 #endif

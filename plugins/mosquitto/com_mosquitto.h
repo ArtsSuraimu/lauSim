@@ -36,16 +36,56 @@ extern "C" int init (const plugin_manager_interface*, int, char **);
 
 class ComMosquitto : public mosqpp::mosquittopp {
 public:
+    /**
+     * creates a new com mosquitto
+     * 
+     * @param id the client id of this mosquitto client instance
+     */
     ComMosquitto(const char *id);
     virtual ~ComMosquitto();
+    /**
+     * initializes the mosquitto library
+     */
     static int init_mosquitto();
+    /**
+     * cleanup of the mosquitto library
+     */
     static int cleanup_mosquitto();
+    /**
+     * initializes the communication interface
+     * 
+     * connects to the mosquitto server and subscribes to the apropriate topics
+     * @param address Server address of the mqtt broker (default = localhost)
+     * @param port Port of the mqtt broker (default = 1883)
+     * @param keep_alive interval for the keep alive packets (default = 60)
+     * @return 0 on success
+     */
     int init(const char * address = "localhost", int port = 1883, unsigned keep_alive = 60);
+    /**
+     * returns the com interface for this instance
+     */
     com *get_com();
+    /**
+     * cleanup the connection
+     */
     void cleanup();
+    /**
+     * notifies a client that a component has failed
+     * 
+     * @param target the name of the target node
+     * @param component Name of the component that is faulty
+     * @param severity The severity of the fault [0,100]
+     * @return 0 on success
+     */
     int notify_fail(const char *target, const char *component, unsigned severity);
+    /**
+     * nitifies lauSim of a failed node
+     * 
+     * @param msg Message to be sent
+     * @param length Length of the message
+     * @return 0 on success
+     */
     int notify_extern(const char *msg, unsigned length);
-
     virtual void on_message(const struct mosquitto_message *);
 private:
     std::string id;

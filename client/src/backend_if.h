@@ -23,9 +23,30 @@ enum en_subsys {
     SUBSYS_PWR = 4
 };
 
+/**
+ * contains the capabilities of the actor
+ */
 extern int lauSim_caps;
+
+/**
+ * initializes the backend
+ * 
+ * @return 0 on success
+ */
 int lauSim_init();
+
+/**
+ * updates the state of a component
+ * 
+ * @param sys the subsystem that is targeted by the fault
+ * @param severity the severity of the fault (0 = running without error, 100 = complete fault)
+ * @return 0 on success
+ */
 int lauSim_set_state(enum en_subsys sys, unsigned long severity);
+
+/**
+ * cleans the backend
+ */
 void lauSim_cleanup();
 
 #endif
