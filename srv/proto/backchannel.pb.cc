@@ -90,12 +90,13 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\021backchannel.proto\"c\n\013Backchannel\022\"\n\004ty"
+      "\n\021backchannel.proto\"z\n\013Backchannel\022\"\n\004ty"
       "pe\030\001 \002(\0162\024.Backchannel.MsgType\022\021\n\tLogErr"
-      "Msg\030\002 \001(\t\"\035\n\007MsgType\022\007\n\003LOG\020\000\022\t\n\005ERROR\020\001"
+      "Msg\030\002 \001(\t\"4\n\007MsgType\022\007\n\003LOG\020\000\022\t\n\005ERROR\020\001"
+      "\022\n\n\006STATUS\020\002\022\t\n\005OTHER\020\004"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 120);
+      descriptor, 143);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "backchannel.proto", &protobuf_RegisterTypes);
 }
@@ -119,6 +120,8 @@ bool Backchannel_MsgType_IsValid(int value) {
   switch (value) {
     case 0:
     case 1:
+    case 2:
+    case 4:
       return true;
     default:
       return false;
@@ -128,6 +131,8 @@ bool Backchannel_MsgType_IsValid(int value) {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const Backchannel_MsgType Backchannel::LOG;
 const Backchannel_MsgType Backchannel::ERROR;
+const Backchannel_MsgType Backchannel::STATUS;
+const Backchannel_MsgType Backchannel::OTHER;
 const Backchannel_MsgType Backchannel::MsgType_MIN;
 const Backchannel_MsgType Backchannel::MsgType_MAX;
 const int Backchannel::MsgType_ARRAYSIZE;

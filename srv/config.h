@@ -26,7 +26,7 @@
 #include <string>
 #include <sstream>
 
-#include "../include/lausim/plugin.h"
+#include <lausim/plugin.h>
 #include "plugin_internal.h"
 
 namespace lauSim {
@@ -47,24 +47,28 @@ enum backChType {
 /**
  * holds the configuration of the server
  */
-class config {
+class Config {
 public:
+    static Config *get_instance();
     /**
      * load the configuration from a configuration file
      * 
      * @param filename Name of the file holding the configuration
      * @retrun 0 on success
      */
-    int load_config(const char * filename, plugin_manager *manager);
+    int load_config(const char * filename);
     plugin *com_actor = nullptr;
     plugin *com_notify = nullptr;
-    plugin *manager = nullptr;
+    plugin *fault_manager = nullptr;
     plugin *logger = nullptr;
     uint64_t tic_length = 0;
     backChType backCh;
 private:
-    int set_config(int id, std::stringstream &, plugin_manager *);
-    int load_lib(const std::string &, std::stringstream &, plugin_manager *);
+    plugin_manager *manager;
+    bool is_loaded;
+    Config();
+    int set_config(int id, std::stringstream &);
+    int load_lib(const std::string &, std::stringstream &);
 
 };
 

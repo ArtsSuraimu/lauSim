@@ -44,6 +44,7 @@ com echo_com = {
     notify_fail,
     notify_extern,
     NULL,
+    NULL,
     NULL
 };
 

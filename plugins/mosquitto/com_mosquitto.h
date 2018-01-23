@@ -17,11 +17,17 @@
 #ifndef COM_MOSQUITTO_H
 #define COM_MOSQUITTO_H
 
+#include <mutex>
 #include <memory>
 #include <lausim/plugin.h>
 #include <lausim/types.h>
 #include <lausim/com.h>
 #include <mosquittopp.h>
+#include <thread>
+
+#if PL_INTF_VERSION != 7
+    #error "Plugin interface Version missmatch"
+#endif
 
 namespace lauSim {
 
@@ -86,10 +92,25 @@ public:
      * @return 0 on success
      */
     int notify_extern(const char *msg, unsigned length);
-    virtual void on_message(const struct mosquitto_message *);
+
+    /**
+     * updates the callback to where messages are forwarded
+     *
+     * @param cb the new callback
+     * @return the previous callback or nullptr if none was set
+     */
+    msg_callback set_callback(msg_callback cb);
+
+    void on_message(const struct mosquitto_message *);
+    void on_connect(int);
+    void on_subscribe(int, int, const int *);
 private:
+    std::mutex backchannel_mutex;
     std::string id;
+    std::thread rcv_thr;
+    int mid;
     bool is_init;
+    msg_callback lausim_callback;
 };
 
 plugin mosquitto_plugin = {

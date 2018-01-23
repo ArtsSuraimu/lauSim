@@ -31,7 +31,7 @@
 #include <lausim/fault_manager.h>
 //#include <lausim/types.h>
 
-#define PL_INTF_VERSION 6
+#define PL_INTF_VERSION 7
 
 #ifdef __cplusplus
 namespace lauSim {

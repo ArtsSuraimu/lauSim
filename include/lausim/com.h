@@ -27,14 +27,16 @@
 #include <cstddef>
 #endif
 
+#include <lausim/types.h>
+
 #ifdef __cplusplus
 namespace lauSim {
 extern "C" {
 #endif
 
-#define COM_NONE = 0
-#define COM_SYNC = 1
-#define COM_ASYNC = 2
+#define COM_NONE 0
+#define COM_SYNC 1
+#define COM_ASYNC 2
 
 typedef struct {
     /**
@@ -78,7 +80,16 @@ typedef struct {
      * @param on_message function to be called when a message is received
      * @return the callback that was previously registered
      */
-    void *(*set_callback) (size_t (*on_message)(void **msg_arr, size_t **len_arr));
+    msg_callback (*set_callback) (msg_callback);
+
+    /**
+     * fetches messages in a synchronous backchannel. The memory is freed by the program
+     * 
+     * @param msg_arr a pointer that will be updated to point to an array of messages
+     * @param len_arr a pointer that will be updated to point to an array of lengths for the messages
+     * @return the number of messages received
+     */
+    size_t (*get_msg) (uint8_t ***msg_arr, size_t **len_arr);
 } com;
 
 typedef com *(*get_com_fun) ();

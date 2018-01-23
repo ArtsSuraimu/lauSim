@@ -38,11 +38,15 @@ using namespace lauSim;
 plugin_manager *instance = nullptr;
 
 plugin_manager *plugin_manager::get_instance() {
-    if (instance != nullptr)
-        return instance;
+    if (instance == nullptr)
+        instance = new plugin_manager();
 
-    instance = new plugin_manager();
     return instance;
+}
+
+plugin_manager::plugin_manager() {
+    logger_used = &standard_log;
+    is_init = true;
 }
 
 int register_plugin_c(plugin *p) {
@@ -83,14 +87,6 @@ const plugin_manager_interface interface = {
     man_set_role,
     man_add_role
 };
-
-int plugin_manager::init() {
-    if (is_init)
-        return -1;
-    logger_used = &standard_log;
-    is_init = true;
-    return 0;
-}
 
 int plugin_manager::set_role(plugin *pl, plugin_type_t new_role) {
     if (pl == nullptr || (pl->pl_type & new_role) != new_role)

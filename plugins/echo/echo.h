@@ -26,6 +26,10 @@
 #include <lausim/com.h>
 #include <lausim/plugin.h>
 
+#if PL_INTF_VERSION != 7
+    #error "Plugin interface Version missmatch"
+#endif
+
 com *get_com(void);
 logger *get_log(void);
 int post_init();

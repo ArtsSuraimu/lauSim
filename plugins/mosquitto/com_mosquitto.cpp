@@ -20,14 +20,15 @@
 #include <cstring>
 #include <cstdlib>
 #include <functional>
+#include <mutex>
 #include <string>
 #include <unistd.h>
-
 
 #include "com_mosquitto.h"
 
 #define HOST_NAME_MAX 255
 #define LAST_WILL_TOPIC "last_will"
+#define back_topic "envelope/master"
 
 namespace lauSim {
 static bool init_state = false;
@@ -36,13 +37,15 @@ logger *log;
 
 int notify_fail (const char *, const char *, unsigned);
 int notify_extern (const char *, unsigned);
+msg_callback set_callback(msg_callback);
 plugin_manager_interface* pi;
 
 com com_interface{
-    0,
+    COM_ASYNC,
     notify_fail,   // notify_fail
     notify_extern,  // notify_extern
     nullptr,
+    set_callback,
     nullptr
 };
 
@@ -55,7 +58,7 @@ ComMosquitto::init_mosquitto() {
             init_state = true;
         
     }
-    log->log_fun(LL_Debug, "MQTT lib initialized");
+    log->log_fun(LL_Debug, "[MQTT] lib initialized");
     return ret;
 }
 
@@ -65,7 +68,7 @@ ComMosquitto::cleanup_mosquitto() {
     if (init_state) {
         ret = mosqpp::lib_cleanup();
     }
-    log->log_fun(LL_Debug, "MQTT lib cleanup");
+    log->log_fun(LL_Debug, "[MQTT] lib cleanup");
     return ret;
 }
 
@@ -74,12 +77,15 @@ int ComMosquitto::init(const char * addr, int port, unsigned keep_alive) {
 
     if (is_init || !init_state)
         return -1;
-    log->log_fun(LL_Debug, "MQTT connecting");
+    log->log_fun(LL_Debug, "[MQTT] connecting");
     if ((msqerr = connect(addr, port, keep_alive))) {
         log->log_fun(LL_Error, mosqpp::strerror(msqerr));
         return -1;
     }
-    log->log_fun(LL_Debug, "MQTT connected");
+    log->log_fun(LL_Debug, "[MQTT] connected");
+    if ((msqerr = subscribe(nullptr, back_topic, 1)) != MOSQ_ERR_SUCCESS) {
+        log->log_fun(LL_Warning, mosqpp::strerror(msqerr));
+    }
     will_set(LAST_WILL_TOPIC, id.length(), id.c_str());
     is_init = true;
     return 0;
@@ -103,6 +109,7 @@ int ComMosquitto::notify_fail(const char *target, const char *cmp, unsigned seve
         log->log_fun(LL_Error, mosqpp::strerror(msqerr));
         return -1;
     }
+    loop_start();
     return 0;
 }
 
@@ -113,7 +120,7 @@ int ComMosquitto::notify_extern(const char *msg, unsigned length) {
     return 0;
 }
 
-ComMosquitto::ComMosquitto(const char *id) : mosquittopp(id), is_init(false){
+ComMosquitto::ComMosquitto(const char *id) : mosquittopp(id), is_init(false), lausim_callback(nullptr){
     this->id = std::string(id);
 }
 
@@ -126,7 +133,7 @@ extern "C" int init (const plugin_manager_interface* pli, int argc, char **argv)
     int sc;
 
     if (argc == 0) {
-        log->log_fun(LL_Error, "MQTT id required");
+        log->log_fun(LL_Error, "[MQTT] id required");
         return 1;
     }
 
@@ -161,7 +168,7 @@ extern "C" int init (const plugin_manager_interface* pli, int argc, char **argv)
         return sc;
     }
 
-    log->log_fun(LL_Debug, "MQTT init finished");
+    log->log_fun(LL_Debug, "[MQTT] init finished");
 
     if (pli->register_plugin(&mosquitto_plugin)){
         ComMosquitto::cleanup_mosquitto();
@@ -172,6 +179,7 @@ extern "C" int init (const plugin_manager_interface* pli, int argc, char **argv)
 }
 
 void ComMosquitto::cleanup(){
+    loop_stop(true);
     if (is_init)
         disconnect();
     if (instance != nullptr)
@@ -202,5 +210,38 @@ int notify_extern(const char *node, unsigned length) {
     return instance->notify_extern(node, length);
 }
 
-void ComMosquitto::on_message(const struct mosquitto_message *) {}
+msg_callback set_callback(msg_callback cb) {
+    return instance->set_callback(cb);
+}
+
+msg_callback ComMosquitto::set_callback(msg_callback cb) {
+    msg_callback old;
+    std::lock_guard<std::mutex> guard(backchannel_mutex);
+    old = lausim_callback;
+    lausim_callback = cb;
+    return old;
+}
+
+void ComMosquitto::on_connect(int rc) {
+    log->log_fun(LL_Debug, "[MQTT] connected");
+}
+
+void ComMosquitto::on_subscribe(int lmid, int, const int*) {
+    log->log_fun(LL_Debug, "[MQTT] subscribed to channel");
+}
+
+void ComMosquitto::on_message(const struct mosquitto_message *msg) {
+    size_t len;
+    uint8_t *msg_fwd;
+    if (msg->payloadlen <= 0 || lausim_callback == nullptr)
+        return;
+    len = msg->payloadlen;
+    msg_fwd = new uint8_t[len];
+    log->log_fun(LL_Debug, "[MQTT] message received");
+    memcpy(msg_fwd, msg->payload, len);
+    std::unique_lock<std::mutex> lock(backchannel_mutex);
+    lausim_callback(msg_fwd, len);
+    lock.unlock();
+    delete[] msg_fwd;
+}
 }

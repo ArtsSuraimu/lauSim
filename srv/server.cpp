@@ -25,16 +25,17 @@
 #include <cassert>
 #include <cstdlib>
 #include <chrono>
+#include <sstream>
 #include <thread>
-#include <atomic>
-#include <csignal>
 
 #include <lausim/plugin.h>
 #include <lausim/node.h>
-#include "options.h"
+
 #include "plugin_internal.h"
 #include "config.h"
 #include "proto/laik_ext.pb.h"
+#include "proto/backchannel.pb.h"
+#include "server.h"
 
 using namespace lauSim;
 
@@ -43,72 +44,16 @@ using namespace lauSim;
 std::chrono::time_point<std::chrono::high_resolution_clock> timestamp;
 std::chrono::nanoseconds duration;
 
-// configuration
+Server *srv_instance = nullptr;
 
-plugin_manager *plugins;
-fault_manager *manager;
-com *com_actor;
-com *com_notify;
-config conf;
-
-size_t num_nodes;
-node **nodes;
-
-// initialization
-
-volatile std::sig_atomic_t termreq;
-Options opts;
-
-void term_handler(int signal){
-    termreq = 1;
-}
-
-void update_log_level (unsigned new_ll) {
-    log_level ll;
-    switch (new_ll) {
-    case 0:
-        ll = LL_None;
-        break;
-    case 1:
-        ll = LL_Debug;
-        break;
-    case 2:
-        ll = LL_Info;
-        break;
-    case 3:
-        ll = LL_Warning;
-        break;
-    case 4:
-        ll = LL_Error;
-        break;
-    case 5:
-        ll = LL_Fatal;
-        break;
-    }
-    plugins->logger_used->set_ll(ll);
-}
-
-int init(unsigned loglevel) {
-
+int Server::init(unsigned loglevel) {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    conf = Config::get_instance();
     plugins = plugin_manager::get_instance();
-    if (plugins->init()){ 
-        // since the plugin manager has not been properly initialize, there is no logger available
-        std::cout << "[FATAL] unable to initialize plugin system" << std::endl;
-        return 1;
-    }
+
+    tic = 0;
 
     // plugin manager has been initialized, from now on logger_used is set
-    update_log_level(loglevel);
-
-    if (conf.load_config(opts.cfile.c_str(), plugins)){
-        plugins->logger_used->log_fun(LL_Fatal, "error while loading config");
-        return 1;
-    }
-
-    if (conf.logger != nullptr) {
-        plugins->logger_used = conf.logger->lf();
-        update_log_level(loglevel);
-    }
     
     plugins->logger_used->log_fun(LL_Debug, "config loaded successfully");
 
@@ -124,36 +69,63 @@ int init(unsigned loglevel) {
     }
 
     // check if the required plugins are configured
-    if (conf.com_actor == nullptr ||
-            conf.com_notify == nullptr ||
-            conf.manager == nullptr){
+    if (conf->com_actor == nullptr ||
+            conf->com_notify == nullptr ||
+            conf->fault_manager == nullptr){
         plugins->logger_used->log_fun(LL_Fatal, "configuration incomplete");
         return 1;
     }
 
-    com_actor = conf.com_actor->c();
-    com_notify = conf.com_notify->c();
+    com_actor = conf->com_actor->c();
+    com_notify = conf->com_notify->c();
 
-    manager = conf.manager->fm();
+    if ((com_actor->capabilities & COM_ASYNC) == COM_ASYNC) {
+        plugins->logger_used->log_fun(LL_Debug, "asynchronous backchannel");
+        com_actor->set_callback(on_message);
+    }
+
+    manager = conf->fault_manager->fm();
     if (manager->get_nodes(&num_nodes, &nodes)) {
         plugins->logger_used->log_fun(LL_Fatal, "unable to get nodes");
         return 1;
     }
 
-    termreq = 0;
-    std::signal(SIGTERM, term_handler);
-    std::signal(SIGABRT, term_handler);
-    std::signal(SIGINT, term_handler);
-    duration = std::chrono::nanoseconds(conf.tic_length);
+    duration = std::chrono::nanoseconds(conf->tic_length);
     timestamp = std::chrono::high_resolution_clock::now();
 
     return 0;
 }
 
-void skip_to_end_of_tic() {
-    unsigned skip = 0;
+extern "C" void Server::on_message(uint8_t *msg, size_t len) {
+    if (srv_instance == nullptr)
+        return;
+    Backchannel back;
+    if (!back.ParseFromString(std::string((char *)msg, len))) {
+        srv_instance->plugins->logger_used->log_fun(LL_Warning, "unable to decode message on backchannel");
+        return;
+    }
+    switch (back.type()) {
+        case Backchannel::LOG:
+            if (!back.has_logerrmsg())
+                break;
+            srv_instance->plugins->logger_used->log_fun(LL_Info, back.logerrmsg().c_str());
+            break;
+        case Backchannel::ERROR:
+            if (!back.has_logerrmsg())
+                break;
+            srv_instance->plugins->logger_used->log_fun(LL_Error, back.logerrmsg().c_str());
+            break;
+        default:
+            if (srv_instance->other_cb != nullptr)
+                srv_instance->other_cb(msg, len);
+    }
+}
 
-    if (conf.tic_length == 0)
+void Server::skip_to_end_of_tic() {
+    unsigned skip = 0;
+    tic++;
+
+    if (conf->tic_length == 0)
         return;
 
     for (timestamp += duration; timestamp < std::chrono::high_resolution_clock::now(); timestamp += duration)
@@ -163,9 +135,27 @@ void skip_to_end_of_tic() {
         plugins->logger_used->log_fun(LL_Warning, (std::to_string(skip) + std::string(" tics skipped - increase tic time?")).c_str());
     
     std::this_thread::sleep_until(timestamp);
+    tic += skip;
 }
 
-void manage_fails(unsigned long tic) {
+size_t Server::get_messages(Backchannel ***bck) {
+    return 0;
+}
+
+Server *Server::get_instance() {
+    if (srv_instance == nullptr)
+        srv_instance = new Server();
+    return srv_instance;
+}
+
+int Server::do_tic() {
+    manager->tic();
+    manage_fails();
+    skip_to_end_of_tic();
+    return 0;
+}
+
+void Server::manage_fails() {
     char buf[512];
     std::string protoStrBuf;
     laik_ext_msg fail_msg;
@@ -197,37 +187,4 @@ void manage_fails(unsigned long tic) {
         fail_msg.SerializeToString(&protoStrBuf);
         com_notify->notify_extern(protoStrBuf.c_str(), protoStrBuf.length());
     }
-}
-
-int main(int argc, char **argv) {
-    unsigned long tic_num = 0;
-    
-    if (opts.parse(argc, argv) != 0)
-        return -1;
-
-    if (opts.cfile.empty()) {
-        std::cout << "usage: " << ((argc > 0) ? argv[0] : "lauSim") << " -c <file>" << std::endl;
-        return -1;
-    }
-
-    if (init(opts.loglevel))
-        return 1;
-
-    plugins->add_role(conf.com_actor, PL_COM_ACTOR);
-    plugins->add_role(conf.com_notify, PL_COM_EXTERN);
-    plugins->add_role(conf.logger, PL_LOGGER);
-    plugins->add_role(conf.manager, PL_FAULT_MANAGER);
-
-    plugins->logger_used->log_fun(LL_Info, "initialization complete");
-
-    while(!termreq) {
-        manager->tic();
-        manage_fails(tic_num);
-        ++tic_num;
-        skip_to_end_of_tic();
-    }
-
-    google::protobuf::ShutdownProtobufLibrary();
-    plugins->logger_used->log_fun(LL_Info, "cleaning up");
-    plugins->cleanup();
 }

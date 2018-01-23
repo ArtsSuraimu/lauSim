@@ -3,6 +3,8 @@ message Backchannel{
 	enum MsgType {
 		LOG = 0;
 		ERROR = 1;
+		STATUS = 2;
+		OTHER = 4;
 	}
 
 	required MsgType type = 1;

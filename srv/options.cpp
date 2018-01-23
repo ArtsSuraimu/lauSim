@@ -32,7 +32,7 @@ int Options::parse(int argc, char **argv) {
             cfile = std::string(optarg);
             break;
         case 'l':
-            loglevel = (unsigned) strtoul(optarg, NULL, 0);
+            loglevel = log_level_from_int((unsigned) strtoul(optarg, NULL, 0));
             break;
         default:
             std::cerr << "unrecognized option '" << (char) opt << "'" << std::endl;

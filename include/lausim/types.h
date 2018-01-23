@@ -44,6 +44,7 @@ typedef enum tag_log_level{
 typedef uint64_t plugin_type_t;
 typedef int (*post_init_fun) ();
 typedef int (*cleanup_fun) ();
+typedef void (*msg_callback)(uint8_t *msg, size_t len);
 
 #ifndef __cplusplus
 typedef unsigned char bool;

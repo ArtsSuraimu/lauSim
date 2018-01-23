@@ -29,13 +29,17 @@
 #include <vector>
 #include <utility>
 
+#include "plugin_internal.h"
 #include "config.h"
+
 using namespace lauSim;
 
 #define config_id 0x0
 #define libs_id 0x1
 #define none_id 0xFFFF
 #define decl_id 0x100
+
+Config *conf_instance = nullptr;
 
 std::vector<std::pair<std::string,int>> tokenids =
     {
@@ -68,7 +72,7 @@ int get_token_identifyer(const std::string &tk) {
     return none_id;
 }
 
-int config::set_config(int id, std::stringstream &stream, plugin_manager *manager){
+int Config::set_config(int id, std::stringstream &stream){
     std::string value;
     plugin *plugin;
 
@@ -125,10 +129,10 @@ int config::set_config(int id, std::stringstream &stream, plugin_manager *manage
         }
         break;
     case manager_id:
-        if (this->manager != nullptr)
+        if (fault_manager != nullptr)
             manager->logger_used->log_fun(LL_Warning, "fault manager is reassigned");
         if (HAS_PL_TYPE(*plugin, PL_FAULT_MANAGER))
-            this->manager = plugin;
+            fault_manager = plugin;
         else {
             manager->logger_used->log_fun(LL_Error, (std::string("plugin \"") + std::string(plugin->name) + std::string("\" is not a fault manager plugin")).c_str());
             return -1;
@@ -142,7 +146,17 @@ int config::set_config(int id, std::stringstream &stream, plugin_manager *manage
     return 0;
 }
 
-int config::load_lib(const std::string &name, std::stringstream &args, plugin_manager *manager) {
+Config *Config::get_instance() {
+    if (conf_instance == nullptr)
+        conf_instance = new Config();
+    return conf_instance;
+}
+
+Config::Config() : is_loaded(false) {
+    manager = plugin_manager::get_instance();
+}
+
+int Config::load_lib(const std::string &name, std::stringstream &args) {
     std::vector<std::string> argv;
     char **cargs;
     int retv;
@@ -160,11 +174,14 @@ int config::load_lib(const std::string &name, std::stringstream &args, plugin_ma
     return retv;
 }
 
-int config::load_config(const char *filename, plugin_manager *manager) {
+int Config::load_config(const char *filename) {
     uint8_t state = 0;
     std::string line;
     std::ifstream conf_file;
     
+    if (is_loaded)
+        return 1;
+
     conf_file.open(filename, std::ios::in);
 
     if (!conf_file.is_open()) {
@@ -197,14 +214,15 @@ int config::load_config(const char *filename, plugin_manager *manager) {
         // if we are in loading lib state
         if (state == (1 << libs_id)) {
             // loab the lib
-            if(load_lib(token, linestr, manager))
+            if(load_lib(token, linestr))
                 return -1;
             continue;
         }
 
         // else update the config accordingly
-        if(set_config(id, linestr, manager))
+        if(set_config(id, linestr))
             return -1;
     }
+    is_loaded = true;
     return 0;
 }

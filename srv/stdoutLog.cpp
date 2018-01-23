@@ -18,11 +18,32 @@
 
 #include <lausim/types.h>
 #include <lausim/plugin.h>
+#include <mutex>
 #include "stdoutLog.h"
 
 namespace lauSim{
 
 log_level ll_min = LL_None;
+std::mutex log_mutex;
+
+log_level log_level_from_int(unsigned int level) {
+    switch (level) {
+    case 0:
+        return LL_None;
+    case 1:
+        return LL_Debug;
+    case 2:
+        return LL_Info;   
+    case 3:
+        return LL_Warning;
+    case 4:
+        return LL_Error;
+    case 5:
+        return LL_Fatal;
+    default:
+        return LL_Warning;
+    }
+}
 
 void log_stdout(log_level l, const char *str) {
     const char * prefix;
@@ -52,7 +73,9 @@ void log_stdout(log_level l, const char *str) {
         break;
     }
 
+    std::unique_lock<std::mutex> log_lock(log_mutex);
     std::cerr << prefix << " " << str << std::endl;
+    log_lock.unlock();
 }
 
 void set_min_log_level(log_level l) {

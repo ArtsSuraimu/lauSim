@@ -44,7 +44,6 @@ public:
      * enforces a singleton pattern so there only exists one plugin manager at a time
      */
     static plugin_manager *get_instance();
-    int init();
     /**
      * loads a library potentially containing plugins and calls its init function
      * 
@@ -103,7 +102,7 @@ public:
     logger * logger_used;
     std::map<plugin*, plugin_type_t> plugins;
 private:
-    plugin_manager() = default;
+    plugin_manager();
     bool is_init;
     std::vector<std::unique_ptr<library>> libraries;
 };

@@ -19,16 +19,21 @@
 #define OPTIONS_H
 
 #include <string>
+#include <lausim/logger.h>
+#include "stdoutLog.h"
 
 namespace lauSim {
 
+/**
+ * Handles options passed to the program
+ */
 class Options {
 public:
-    Options(): cfile(""), loglevel(0) {}
+    Options(): cfile(""), loglevel(LL_Warning) {}
     int parse(int argc, char ** argv);
 
     std::string cfile;
-    unsigned loglevel;
+    log_level loglevel;
 };
 
 }

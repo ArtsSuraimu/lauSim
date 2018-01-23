@@ -23,6 +23,8 @@ namespace lauSim{
 
 extern logger standard_log;
 
+log_level log_level_from_int(unsigned int level);
+
 }
 
 #endif // !STDOUTLOG_H
