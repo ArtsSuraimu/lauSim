@@ -20,11 +20,14 @@ include(GNUInstallDirs)
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -pedantic -Wl,-z,relro,-z,now -fPIE -pie -fstack-protector-strong -g -Wno-unused-parameter")
 set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -pedantic -Wl,-z,relro,-z,now -fPIE -pie -fstack-protector-strong -g -Wno-unused-parameter")
 
+find_package(Protobuf REQUIRED)
+
+add_subdirectory(proto)
 add_subdirectory(client)
 
-include_directories("${PROJECT_SOURCE_DIR}/include")
+include_directories("${PROJECT_SOURCE_DIR}/include" ${ProtoIncludeDir})
 file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp"
-                  "${PROJECT_SOURCE_DIR}/srv/proto/*.cc"
+#                  "${PROJECT_SOURCE_DIR}/srv/proto/*.cc"
                   "${PROJECT_SOURCE_DIR}/srv/*.cpp"
                   "${PROJECT_SOURCE_DIR}/com/mosquitto*.cpp")
 
@@ -32,7 +35,7 @@ file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp"
 MESSAGE( STATUS "SOURCES:   " ${SOURCES})
 
 add_executable(lauSim ${SOURCES})
-TARGET_LINK_LIBRARIES(lauSim mosquittopp dl protobuf)
+TARGET_LINK_LIBRARIES(lauSim protocols mosquittopp dl)
 
 install(TARGETS lauSim EXPORT lauSimConfig
 	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

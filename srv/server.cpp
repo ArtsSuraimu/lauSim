@@ -33,8 +33,8 @@
 
 #include "plugin_internal.h"
 #include "config.h"
-#include "proto/laik_ext.pb.h"
-#include "proto/backchannel.pb.h"
+#include <laik_ext.pb.h>
+#include <backchannel.pb.h>
 #include "server.h"
 
 using namespace lauSim;
