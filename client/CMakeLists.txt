@@ -13,10 +13,10 @@
 # limitations under the License.
 
 
-include_directories("${PROJECT_SOURCE_DIR}/client/include")
+include_directories("${PROJECT_SOURCE_DIR}/client/include" ${ProtoIncludeDir})
 add_executable(client_mqtt "${PROJECT_SOURCE_DIR}/client/src/mqtt.c" "${PROJECT_SOURCE_DIR}/client/src/client.c")
 target_compile_definitions(client_mqtt PRIVATE -DCON=MQTT)
-TARGET_LINK_LIBRARIES(client_mqtt mosquitto)
+TARGET_LINK_LIBRARIES(client_mqtt cprotocols mosquitto)
 
 add_executable(privileged "${PROJECT_SOURCE_DIR}/client/src/backend.c" "${PROJECT_SOURCE_DIR}/client/src/privileged.c")
 add_library(preload SHARED "${PROJECT_SOURCE_DIR}/client/src/backend.c" "${PROJECT_SOURCE_DIR}/client/src/preload.c")

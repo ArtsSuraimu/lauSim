@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <interface.h>
 #include <interface_backend.h>
+#include <backchannel.pb-c.h>
 
 volatile int req_stop = 0;
 
@@ -33,7 +34,9 @@ struct sigaction sigact;
 int main(int argc, char **argv) {
     fault *flt;
     FILE *fifo;
-    size_t num, i;
+    size_t num, i, msg_len;
+    Backchannel msg;
+    uint8_t *msg_buf;
 #if CON == MQTT
     struct mqtt_opt opt;
 #endif
@@ -64,6 +67,15 @@ int main(int argc, char **argv) {
         printf("mqtt init failed\n");
         return -2;
     }
+
+    backchannel__init(&msg);
+    msg.type = BACKCHANNEL__MSG_TYPE__LOG;
+    msg.logerrmsg = argv[1];
+    msg_len = backchannel__get_packed_size(&msg);
+    msg_buf = calloc(1, msg_len);
+    backchannel__pack(&msg, msg_buf);
+    send_back(msg_buf, msg_len);
+    free(msg_buf);
 #endif
 
     while(!req_stop) {
@@ -82,6 +94,7 @@ int main(int argc, char **argv) {
     // tell the backend to exit
     fputs("exit\n", fifo);
     fclose(fifo);
+    cleanup();
 
     return EXIT_SUCCESS;
 }

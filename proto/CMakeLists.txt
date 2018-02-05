@@ -9,6 +9,7 @@ set(ProtoIncludeDir ${CMAKE_CURRENT_BINARY_DIR}
 
 FUNCTION (GENERATE_PROTO_C ProtoFile SRC HDR)
     add_custom_command(OUTPUT ${SRC} ${HDR}
+        PRE_BUILD
         COMMAND "protoc-c"
         ARGS -I${CMAKE_CURRENT_SOURCE_DIR} ${ProtoFile} --c_out=${CMAKE_CURRENT_BINARY_DIR})
 ENDFUNCTION (GENERATE_PROTO_C)
@@ -31,4 +32,4 @@ PROTOBUF_GENERATE_C (ProtoSrcC ProtoHdrC ${ProtoFiles})
 #MESSAGE(STATUS "Protoc: " ${ProtoSrcC})
 
 add_library(cprotocols STATIC ${ProtoSrcC})
-target_link_libraries(cprotocols ${PROTOBUF_LIBRARY})
+target_link_libraries(cprotocols protobuf-c)
