@@ -155,6 +155,11 @@ int Server::do_tic() {
     return 0;
 }
 
+void Server::cleanup() {
+    if (srv_instance != nullptr)
+        delete srv_instance;
+}
+
 void Server::manage_fails() {
     char buf[512];
     std::string protoStrBuf;

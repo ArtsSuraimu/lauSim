@@ -156,6 +156,11 @@ Config::Config() : is_loaded(false) {
     manager = plugin_manager::get_instance();
 }
 
+void Config::cleanup() {
+    if (conf_instance != nullptr)
+        delete conf_instance;
+}
+
 int Config::load_lib(const std::string &name, std::stringstream &args) {
     std::vector<std::string> argv;
     char **cargs;

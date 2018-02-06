@@ -19,6 +19,7 @@ public:
     int do_tic();
     void manage_fails();
     static void on_message(uint8_t *, size_t);
+    void cleanup();
 private:
     Server() = default;
     unsigned backchannel_type;

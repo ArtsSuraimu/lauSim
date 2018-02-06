@@ -26,13 +26,8 @@ add_subdirectory(proto)
 add_subdirectory(client)
 
 include_directories("${PROJECT_SOURCE_DIR}/include" ${ProtoIncludeDir})
-file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp"
-#                  "${PROJECT_SOURCE_DIR}/srv/proto/*.cc"
-                  "${PROJECT_SOURCE_DIR}/srv/*.cpp"
+file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/srv/*.cpp"
                   "${PROJECT_SOURCE_DIR}/com/mosquitto*.cpp")
-
-#MESSAGE( STATUS "SRC_DIR:   " ${PROJECT_SOURCE_DIR})
-MESSAGE( STATUS "SOURCES:   " ${SOURCES})
 
 add_executable(lauSim ${SOURCES})
 TARGET_LINK_LIBRARIES(lauSim protocols mosquittopp dl)

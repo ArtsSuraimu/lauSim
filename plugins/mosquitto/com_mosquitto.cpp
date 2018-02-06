@@ -83,10 +83,11 @@ int ComMosquitto::init(const char * addr, int port, unsigned keep_alive) {
         return -1;
     }
     log->log_fun(LL_Debug, "[MQTT] connected");
-    if ((msqerr = subscribe(nullptr, back_topic, 1)) != MOSQ_ERR_SUCCESS) {
+    if ((msqerr = subscribe(nullptr, back_topic, 0)) != MOSQ_ERR_SUCCESS) {
         log->log_fun(LL_Warning, mosqpp::strerror(msqerr));
     }
     will_set(LAST_WILL_TOPIC, id.length(), id.c_str());
+    loop_start();
     is_init = true;
     return 0;
 }
@@ -109,7 +110,6 @@ int ComMosquitto::notify_fail(const char *target, const char *cmp, unsigned seve
         log->log_fun(LL_Error, mosqpp::strerror(msqerr));
         return -1;
     }
-    loop_start();
     return 0;
 }
 

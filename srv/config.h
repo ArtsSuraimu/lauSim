@@ -57,6 +57,7 @@ public:
      * @retrun 0 on success
      */
     int load_config(const char * filename);
+    void cleanup();
     plugin *com_actor = nullptr;
     plugin *com_notify = nullptr;
     plugin *fault_manager = nullptr;

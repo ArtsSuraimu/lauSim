@@ -1,6 +1,7 @@
 
 #include <atomic>
 #include <csignal>
+#include <iostream>
 
 #include "config.h"
 #include "options.h"
@@ -68,4 +69,6 @@ int main(int argc, char **argv) {
     google::protobuf::ShutdownProtobufLibrary();
     plugins->logger_used->log_fun(LL_Info, "cleaning up");
     plugins->cleanup();
+    conf->cleanup();
+    server->cleanup();
 }
