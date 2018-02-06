@@ -107,7 +107,6 @@ public:
 private:
     std::mutex backchannel_mutex;
     std::string id;
-    std::thread rcv_thr;
     int mid;
     bool is_init;
     msg_callback lausim_callback;

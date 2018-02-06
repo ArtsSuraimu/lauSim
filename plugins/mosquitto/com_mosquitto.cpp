@@ -77,6 +77,7 @@ int ComMosquitto::init(const char * addr, int port, unsigned keep_alive) {
 
     if (is_init || !init_state)
         return -1;
+    threaded_set(true);
     log->log_fun(LL_Debug, "[MQTT] connecting");
     if ((msqerr = connect(addr, port, keep_alive))) {
         log->log_fun(LL_Error, mosqpp::strerror(msqerr));
@@ -179,12 +180,9 @@ extern "C" int init (const plugin_manager_interface* pli, int argc, char **argv)
 }
 
 void ComMosquitto::cleanup(){
-    loop_stop(true);
+    loop_stop();
     if (is_init)
         disconnect();
-    if (instance != nullptr)
-        delete instance;
-    
 }
 
 int post_init() {
@@ -194,6 +192,7 @@ int post_init() {
 
 int cleanup() {
     instance->cleanup();
+    delete instance;
     ComMosquitto::cleanup_mosquitto();
     return 0;
 }
