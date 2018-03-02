@@ -23,6 +23,11 @@
 #ifndef NODE_H
 #define NODE_H
 
+#define NODE_STATE_UNKNOWN 0
+#define NODE_STATE_READY 1
+#define NODE_STATE_ERROR 2
+#define NODE_STATE_FINISHED 3
+
 #ifdef __cplusplus
 namespace lauSim {
 extern "C" {
@@ -44,6 +49,7 @@ typedef struct {
     char *name;
     int id;
     node_type_t type;
+    unsigned state;
     unsigned num_components;
     component **components;
 } node;

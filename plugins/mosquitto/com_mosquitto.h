@@ -48,7 +48,7 @@ public:
      * @param id the client id of this mosquitto client instance
      */
     ComMosquitto(const char *id);
-    virtual ~ComMosquitto();
+    ~ComMosquitto();
     /**
      * initializes the mosquitto library
      */
@@ -102,8 +102,8 @@ public:
     msg_callback set_callback(msg_callback cb);
 
     void on_message(const struct mosquitto_message *);
-    void on_connect(int);
-    void on_subscribe(int, int, const int *);
+    // void on_connect(int);
+    // void on_subscribe(int, int, const int *);
 private:
     std::mutex backchannel_mutex;
     std::string id;

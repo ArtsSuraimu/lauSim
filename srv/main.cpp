@@ -2,6 +2,8 @@
 #include <atomic>
 #include <csignal>
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 #include "config.h"
 #include "options.h"
@@ -12,6 +14,7 @@
 using namespace lauSim;
 
 volatile std::sig_atomic_t termreq;
+size_t tic_num = 0;
 
 void term_handler(int signal){
     termreq = 1;
@@ -63,7 +66,17 @@ int main(int argc, char **argv) {
     std::signal(SIGABRT, term_handler);
     std::signal(SIGINT, term_handler);
 
-    while(!termreq)
+    if (opts.sync) {
+        while(!termreq) {
+            if (server->all_nodes_ready())
+                break;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+
+        plugins->logger_used->log_fun(LL_Info, "all nodes ready");
+    }
+
+    while(!termreq && (opts.max_tics == 0 || opts.max_tics > tic_num++))
         server->do_tic();
 
     google::protobuf::ShutdownProtobufLibrary();

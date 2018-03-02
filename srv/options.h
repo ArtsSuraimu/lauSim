@@ -29,11 +29,13 @@ namespace lauSim {
  */
 class Options {
 public:
-    Options(): cfile(""), loglevel(LL_Warning) {}
+    Options(): cfile(""), loglevel(LL_Warning), sync(false), max_tics(0) {}
     int parse(int argc, char ** argv);
 
     std::string cfile;
     log_level loglevel;
+    bool sync;
+    unsigned max_tics;
 };
 
 }

@@ -91,12 +91,36 @@ int Server::init(unsigned loglevel) {
     }
 
     duration = std::chrono::nanoseconds(conf->tic_length);
-    timestamp = std::chrono::high_resolution_clock::now();
 
     return 0;
 }
 
+bool Server::all_nodes_ready() {
+    size_t i;
+    for (i = 0; i < num_nodes; i++) {
+        if (nodes[i]->state != NODE_STATE_READY)
+            return false;
+    }
+    return true;
+}
+
+int Server::set_node_state(const char *name, unsigned state) {
+    size_t i;
+
+    for (i = 0; i < num_nodes; i++) {
+        if (strcmp(name, nodes[i]->name) == 0) {
+            nodes[i]->state = state;
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 extern "C" void Server::on_message(uint8_t *msg, size_t len) {
+    char buf[0x80];
+    const char * status;
+    unsigned state = NODE_STATE_UNKNOWN;
     if (srv_instance == nullptr)
         return;
     Backchannel back;
@@ -114,6 +138,34 @@ extern "C" void Server::on_message(uint8_t *msg, size_t len) {
             if (!back.has_logerrmsg())
                 break;
             srv_instance->plugins->logger_used->log_fun(LL_Error, back.logerrmsg().c_str());
+            break;
+        case Backchannel::STATUS:
+            if (!back.has_newstatus()) {
+                srv_instance->plugins->logger_used->log_fun(LL_Warning, "status message did not contain a status");    
+                break;
+            }
+            
+            switch (back.newstatus()) {
+            case Backchannel::STREADY:
+                status = "ready";
+                state = NODE_STATE_READY;
+                break;
+            case Backchannel::STERROR:
+                status = "error";
+                state = NODE_STATE_ERROR;
+                break;
+            case Backchannel::STFINISHED:
+                status = "finished";
+                state = NODE_STATE_FINISHED;
+                break;
+            default:
+                status = "unknown status";
+                break;
+            }
+            
+            srv_instance->set_node_state(back.nodename().c_str(), state);
+            snprintf(buf, sizeof(buf) - 1, "[%s] new status: %s", back.nodename().c_str(), status);
+            srv_instance->plugins->logger_used->log_fun(LL_Info, buf);
             break;
         default:
             if (srv_instance->other_cb != nullptr)
@@ -149,6 +201,8 @@ Server *Server::get_instance() {
 }
 
 int Server::do_tic() {
+    if (tic == 0)
+        timestamp = std::chrono::high_resolution_clock::now();
     manager->tic();
     manage_fails();
     skip_to_end_of_tic();

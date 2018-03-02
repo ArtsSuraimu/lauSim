@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(echo)
-add_subdirectory(random)
-add_subdirectory(mosquitto)
-add_subdirectory(transcribe)
+include_directories("${PROJECT_SOURCE_DIR}/include")
+add_library(transcribe SHARED "transcribe.c")
+
+add_dependencies(transcribe lauSim)

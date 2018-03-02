@@ -22,9 +22,11 @@
 
 #include <interface.h>
 
-#define back_topic "envelope/master"
+#define back_topic "envelope/master/"
 #define last_will_topic "last_will"
 #define check(a,b) do {if ((a) != (b)) return -1;} while(0)
+
+char *node_specific_back_topic;
 
 struct mosquitto *con = NULL;
 pthread_mutex_t rcv_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -60,6 +62,10 @@ int init(const char *name, void *opt) {
     con = mosquitto_new(name, true, NULL);
     if (con == NULL)
         return 1;
+    node_specific_back_topic = malloc(sizeof(back_topic) + strlen(name));
+    memcpy(node_specific_back_topic, back_topic, sizeof(back_topic));
+    strcat(node_specific_back_topic, name);
+    printf("%s\n", node_specific_back_topic);
     check(mosquitto_will_set(con, last_will_topic, strlen(name), name, 1, false), MOSQ_ERR_SUCCESS);
     mosquitto_message_callback_set(con, on_message);
     mosquitto_connect_callback_set(con, on_connect);
@@ -73,7 +79,7 @@ int init(const char *name, void *opt) {
 
 int send_back(uint8_t *buf, size_t len) {
     if (con == NULL) return -1;
-    check(mosquitto_publish(con, NULL, back_topic, len, buf, 1, false), MOSQ_ERR_SUCCESS);
+    check(mosquitto_publish(con, NULL, node_specific_back_topic, len, buf, 1, true), MOSQ_ERR_SUCCESS);
     return 0;
 }
 
@@ -137,4 +143,5 @@ void cleanup(void) {
         mosquitto_destroy(con);
     }
     mosquitto_lib_cleanup();
+    free(node_specific_back_topic);
 }

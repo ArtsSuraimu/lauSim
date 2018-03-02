@@ -19,6 +19,8 @@ public:
     int do_tic();
     void manage_fails();
     static void on_message(uint8_t *, size_t);
+    int set_node_state(const char *name, unsigned new_state);
+    bool all_nodes_ready();
     void cleanup();
 private:
     Server() = default;

@@ -21,7 +21,7 @@
 #include "options.h"
 
 using namespace lauSim;
-char optstr[] = "c:l:";
+char optstr[] = "c:l:sn:";
 
 int Options::parse(int argc, char **argv) {
     int opt;
@@ -33,6 +33,12 @@ int Options::parse(int argc, char **argv) {
             break;
         case 'l':
             loglevel = log_level_from_int((unsigned) strtoul(optarg, NULL, 0));
+            break;
+        case 's':
+            sync = true;
+            break;
+        case 'n':
+            max_tics = strtoul(optarg, NULL, 0);
             break;
         default:
             std::cerr << "unrecognized option '" << (char) opt << "'" << std::endl;

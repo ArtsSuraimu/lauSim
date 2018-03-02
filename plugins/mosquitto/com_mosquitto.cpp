@@ -28,7 +28,7 @@
 
 #define HOST_NAME_MAX 255
 #define LAST_WILL_TOPIC "last_will"
-#define back_topic "envelope/master"
+#define back_topic "envelope/master/#"
 
 namespace lauSim {
 static bool init_state = false;
@@ -77,7 +77,6 @@ int ComMosquitto::init(const char * addr, int port, unsigned keep_alive) {
 
     if (is_init || !init_state)
         return -1;
-    threaded_set(true);
     log->log_fun(LL_Debug, "[MQTT] connecting");
     if ((msqerr = connect(addr, port, keep_alive))) {
         log->log_fun(LL_Error, mosqpp::strerror(msqerr));
@@ -88,7 +87,6 @@ int ComMosquitto::init(const char * addr, int port, unsigned keep_alive) {
         log->log_fun(LL_Warning, mosqpp::strerror(msqerr));
     }
     will_set(LAST_WILL_TOPIC, id.length(), id.c_str());
-    loop_start();
     is_init = true;
     return 0;
 }
@@ -180,13 +178,15 @@ extern "C" int init (const plugin_manager_interface* pli, int argc, char **argv)
 }
 
 void ComMosquitto::cleanup(){
-    loop_stop();
-    if (is_init)
+    if (is_init) {
         disconnect();
+        loop_stop();
+    }
 }
 
 int post_init() {
     log = pi->get_logger();
+    instance->loop_start();
     return 0;
 }
 
@@ -221,6 +221,7 @@ msg_callback ComMosquitto::set_callback(msg_callback cb) {
     return old;
 }
 
+/*
 void ComMosquitto::on_connect(int rc) {
     log->log_fun(LL_Debug, "[MQTT] connected");
 }
@@ -228,15 +229,16 @@ void ComMosquitto::on_connect(int rc) {
 void ComMosquitto::on_subscribe(int lmid, int, const int*) {
     log->log_fun(LL_Debug, "[MQTT] subscribed to channel");
 }
+*/
 
 void ComMosquitto::on_message(const struct mosquitto_message *msg) {
     size_t len;
     uint8_t *msg_fwd;
+    log->log_fun(LL_Debug, "[MQTT] message received");
     if (msg->payloadlen <= 0 || lausim_callback == nullptr)
         return;
     len = msg->payloadlen;
     msg_fwd = new uint8_t[len];
-    log->log_fun(LL_Debug, "[MQTT] message received");
     memcpy(msg_fwd, msg->payload, len);
     std::unique_lock<std::mutex> lock(backchannel_mutex);
     lausim_callback(msg_fwd, len);

@@ -67,16 +67,18 @@ int main(int argc, char **argv) {
         printf("mqtt init failed\n");
         return -2;
     }
+#endif
 
     backchannel__init(&msg);
-    msg.type = BACKCHANNEL__MSG_TYPE__LOG;
-    msg.logerrmsg = argv[1];
+    msg.type = BACKCHANNEL__MSG_TYPE__STATUS;
+    msg.nodename = argv[1];
+    msg.newstatus = BACKCHANNEL__NODE_STATUS__STREADY;
+    msg.has_newstatus = 1;
     msg_len = backchannel__get_packed_size(&msg);
     msg_buf = calloc(1, msg_len);
     backchannel__pack(&msg, msg_buf);
     send_back(msg_buf, msg_len);
     free(msg_buf);
-#endif
 
     while(!req_stop) {
         flt = get_faults(100, &num);

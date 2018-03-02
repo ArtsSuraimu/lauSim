@@ -7,6 +7,14 @@ message Backchannel{
 		OTHER = 4;
 	}
 
-	required MsgType type = 1;
-	optional string LogErrMsg = 2;
+	enum NodeStatus {
+		STREADY = 0;
+		STERROR = 1;
+		STFINISHED = 2;
+	}
+
+	required string nodeName = 1;
+	required MsgType type = 2;
+	optional string logErrMsg = 3;
+	optional NodeStatus newStatus = 4;
 }

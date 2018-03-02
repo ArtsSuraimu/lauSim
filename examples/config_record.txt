@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(echo)
-add_subdirectory(random)
-add_subdirectory(mosquitto)
-add_subdirectory(transcribe)
+[libs]
+./plugins/echo/libecho.so --arg1 -h
+./plugins/random/librandom.so 5
+./plugins/transcribe/libtranscribe.so random log.txt
+
+[config]
+com = echo
+fault = transcribe
+tic = 0
