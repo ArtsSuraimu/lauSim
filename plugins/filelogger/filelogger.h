@@ -16,11 +16,11 @@
 
 /*
  * @Author: C. Jonischkeit 
- * @Date: 2017-07-18
+ * @Date: 2018-03-05
 */
 
-#ifndef ECHO_H
-#define ECHO_H
+#ifndef FILELOGGER_H
+#define FILELOGGER_H
 
 #include <stdlib.h>
 
@@ -28,21 +28,21 @@
 #include <lausim/fault_manager.h>
 #include <lausim/plugin.h>
 
-fault_manager *get_fm(void);
 int init (const plugin_manager_interface*, int argc, char **argv);
 int cleanup(void);
 int post(void);
+logger *get_logger(void); 
 
-plugin trans_plugin = {
-    1,          // version
-    PL_FAULT_MANAGER | PL_OTHER,          // pl_type fault_manager
-    "transcribe",   // name
+plugin filelogger_plugin = {
+    .version = 1,           // version
+    .pl_type = PL_LOGGER,   // pl_type fault_manager
+    .name = "filelogger",   // name
 
-    post,       // post init hook
-    cleanup,    // cleanup
-    NULL,       // get_com_fun
-    get_fm,     // get_fault_fun
-    NULL        // logger
+    .post_init = post,      // post init hook
+    .cleanup = cleanup,     // cleanup
+    .c = NULL,              // get_com_fun
+    .fm = NULL,             // get_fault_fun
+    .lf = get_logger        // logger
 };
 
 #endif

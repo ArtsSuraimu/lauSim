@@ -15,7 +15,7 @@
 [libs]
 ./plugins/echo/libecho.so --arg1 -h
 ./plugins/random/librandom.so 5
-./plugins/transcribe/libtranscribe.so random log.txt
+./plugins/transcribe/libtranscribe.so random record.txt
 
 [config]
 com = echo

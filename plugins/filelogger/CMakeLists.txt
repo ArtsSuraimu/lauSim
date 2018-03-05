@@ -13,6 +13,6 @@
 # limitations under the License.
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
-add_library(transcribe SHARED "transcribe.c")
+add_library(filelogger SHARED "filelogger.c")
 
-add_dependencies(transcribe lauSim)
+add_dependencies(filelogger lauSim)

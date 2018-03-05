@@ -25,6 +25,10 @@ int main(int argc, char **argv) {
     Server *server;
     Config *conf;
     plugin_manager *plugins;
+    pl_role *loaded;
+    unsigned num;
+    size_t nameLen, maxNameLen;
+    char buf[512];
     
     if (opts.parse(argc, argv) != 0)
         return -1;
@@ -50,14 +54,13 @@ int main(int argc, char **argv) {
         plugins->logger_used->set_ll(opts.loglevel);
     }
 
-
-    if (server->init(opts.loglevel))
-        return 1;
-
     plugins->add_role(conf->com_actor, PL_COM_ACTOR);
     plugins->add_role(conf->com_notify, PL_COM_EXTERN);
     plugins->add_role(conf->logger, PL_LOGGER);
     plugins->add_role(conf->fault_manager, PL_FAULT_MANAGER);
+
+    if (server->init(opts.loglevel))
+        return 1;
 
     plugins->logger_used->log_fun(LL_Info, "initialization complete");
 
@@ -65,6 +68,36 @@ int main(int argc, char **argv) {
     std::signal(SIGTERM, term_handler);
     std::signal(SIGABRT, term_handler);
     std::signal(SIGINT, term_handler);
+
+    num = plugins->all_plugins(&loaded);
+
+    maxNameLen = strlen(loaded[0].pl->name);
+    for (unsigned i = 1; i < num; i++) {
+        if ((nameLen = strlen(loaded[0].pl->name)) > maxNameLen)
+            maxNameLen = nameLen;
+    }
+
+    snprintf(buf, sizeof(buf) - 1, "%-*s CA CE MA LO TO OT", (int) maxNameLen, "Name");
+    plugins->logger_used->log_fun(LL_Info, buf);
+    for (unsigned i = 0; i < num; i++) {
+        snprintf(buf, sizeof(buf) - 1, "%-*s %c%c %c%c %c%c %c%c %c%c %c%c",
+            (int) maxNameLen,
+            loaded[i].pl->name,
+            HAS_PL_TYPE((*loaded[i].pl), PL_COM_ACTOR) ? 'A' : '-',
+            (loaded[i].role & PL_COM_ACTOR) ? 'U' : '-',
+            HAS_PL_TYPE((*loaded[i].pl), PL_COM_EXTERN) ? 'A' : '-',
+            (loaded[i].role & PL_COM_EXTERN) ? 'U' : '-',
+            HAS_PL_TYPE((*loaded[i].pl), PL_FAULT_MANAGER) ? 'A' : '-',
+            (loaded[i].role & PL_FAULT_MANAGER) ? 'U' : '-',
+            HAS_PL_TYPE((*loaded[i].pl), PL_LOGGER) ? 'A' : '-',
+            (loaded[i].role & PL_LOGGER) ? 'U' : '-',
+            HAS_PL_TYPE((*loaded[i].pl), PL_TOPOLOGY) ? 'A' : '-',
+            (loaded[i].role & PL_TOPOLOGY) ? 'U' : '-',
+            HAS_PL_TYPE((*loaded[i].pl), PL_OTHER) ? 'A' : '-',
+            (loaded[i].role & PL_OTHER) ? 'U' : '-');
+        plugins->logger_used->log_fun(LL_Info, buf);
+    }
+    free(loaded);
 
     if (opts.sync) {
         while(!termreq) {

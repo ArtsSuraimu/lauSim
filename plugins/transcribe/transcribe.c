@@ -1,5 +1,5 @@
 /*
-   Copyright 2017 Clemens Jonischkeit
+   Copyright 2018 Clemens Jonischkeit
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -64,11 +64,11 @@ int inject_fail(fault* f) {
 }
 
 fault_manager fm = {
-    1,          // version
-    get_nodes,
-    tic,
-    get_fail,
-    inject_fail
+    .version = 1,          // version
+    .get_nodes = get_nodes,
+    .tic = tic,
+    .get_fail = get_fail,
+    .inject_fail = inject_fail
 };
 
 fault_manager *get_fm() {
@@ -102,7 +102,15 @@ int init(const plugin_manager_interface *inter, int argc, char **argv) {
 }
 
 int post(void) {
-    nested = plug_man->by_name(fault_name)->fm();
+    logg = plug_man->get_logger();
+    plugin *fmpl = plug_man->by_name(fault_name);
+    if (fmpl == NULL) {
+        logg->log_fun(LL_Error, "[TRANSCRIBE] unable aquire nested fault manager");
+        return 1;
+    }
+    plug_man->add_role(fmpl, PL_FAULT_MANAGER);
+    plug_man->set_role(&trans_plugin, PL_OTHER);
+    nested = fmpl->fm();
     return 0;
 }
 
