@@ -58,11 +58,29 @@ public:
      */
     int load_config(const char * filename);
     void cleanup();
+    /**
+     * Points to the plugin used for communication with the actor
+     */
     plugin *com_actor = nullptr;
+    /**
+     * Points to the plugin used for anouncing faults to external programs
+     */
     plugin *com_notify = nullptr;
+    /**
+     * Points to the plugin, governing the nodes and faults
+     */
     plugin *fault_manager = nullptr;
+    /**
+     * Points to the used logger
+     */
     plugin *logger = nullptr;
+    /**
+     * The tic length in ns, a value of 0 also suppresses skipping tics, to keep up with time
+     */
     uint64_t tic_length = 0;
+    /**
+     * The type of the backchannel that shall be used (deprecated)
+     */
     backChType backCh;
 private:
     plugin_manager *manager;

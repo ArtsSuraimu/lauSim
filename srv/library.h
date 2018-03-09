@@ -50,7 +50,15 @@ public:
      */
     void *get_sym_addr(const char *symname);
     ~library();
+    /**
+     * stores the number of arguments supplyied to the library init
+     */
     int argc;
+    /**
+     * stores the argument vector supplyied to the library
+     * The keeps the vector valid during the lifetime of the plugin and also
+     * enables freeing these resources
+     */
     char **argv;
 protected:
     bool is_init = false;

@@ -34,6 +34,7 @@ int get_nodes(size_t *num_nodes, node ***lau_nodes) {
     int ret = nested->get_nodes(num_nodes, lau_nodes);
 
     if (ret == 0) {
+        fprintf("%d\n", *num_nodes);
         for (i = 0; i < *num_nodes; i++)
             fprintf(file, "%s\n", (*lau_nodes)[i]->name);
     }

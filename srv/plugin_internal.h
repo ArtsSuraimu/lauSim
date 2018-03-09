@@ -99,11 +99,20 @@ public:
      */
     int unregister_plugin(const char *name);
     void cleanup();
+    /**
+     * pointer to the logger used.
+     */
     logger * logger_used;
+    /**
+     * a mapping between plugins and the role they are used in
+     */
     std::map<plugin*, plugin_type_t> plugins;
 private:
     plugin_manager();
     bool is_init;
+    /**
+     * vector holding the shared objects containing the plugins
+     */
     std::vector<std::unique_ptr<library>> libraries;
 };
 
