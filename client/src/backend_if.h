@@ -33,7 +33,7 @@ extern int lauSim_caps;
  * 
  * @return 0 on success
  */
-int lauSim_init();
+int lauSim_backend_init();
 
 /**
  * updates the state of a component

@@ -107,6 +107,7 @@ int main(int argc, char **argv) {
         }
 
         plugins->logger_used->log_fun(LL_Info, "all nodes ready");
+        server->send_synced_signal();
     }
 
     while(!termreq && (opts.max_tics == 0 || opts.max_tics > tic_num++))

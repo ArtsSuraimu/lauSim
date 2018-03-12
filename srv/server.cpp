@@ -200,6 +200,12 @@ Server *Server::get_instance() {
     return srv_instance;
 }
 
+void Server::send_synced_signal() {
+    size_t i;
+    for (i = 0; i < num_nodes; i++)
+        com_actor->notify_fail(nodes[i]->name, NULL, 0);
+}
+
 int Server::do_tic() {
     if (tic == 0)
         timestamp = std::chrono::high_resolution_clock::now();

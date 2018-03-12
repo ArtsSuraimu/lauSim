@@ -23,10 +23,12 @@
  */
 extern volatile int lauSim_req_close_fd;
 
+int lauSim_init(int argc, char **argv);
+
 /**
  * main loop of the backend dispatching the update state methodes
  */
-int lauSim_main(int argc, char **argv);
+int lauSim_main();
 
 /**
  * cleanup of the backend

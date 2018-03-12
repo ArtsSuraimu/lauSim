@@ -62,11 +62,11 @@ int is_iptables_pressent() {
     return ret;
 }
 
-int lauSim_init () {
+int lauSim_backend_init () {
     printf("looking for iptables");
     if (!is_iptables_pressent())
         return 1;
-    return 0;
+    return lauSim_main();
 }
 
 void cleanup_net() {

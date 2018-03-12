@@ -61,6 +61,7 @@ public:
      * @return true if all nodes are ready, false if any node is not
      */
     bool all_nodes_ready();
+    void send_synced_signal();
     void cleanup();
 private:
     Server() = default;

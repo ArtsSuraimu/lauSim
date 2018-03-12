@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
     size_t num, i, msg_len;
     Backchannel msg;
     uint8_t *msg_buf;
+    int synced = 0;
 #if CON == MQTT
     struct mqtt_opt opt;
 #endif
@@ -83,6 +84,11 @@ int main(int argc, char **argv) {
     while(!req_stop) {
         flt = get_faults(100, &num);
         for (i = 0; i < num; i++) {
+            if (!synced) {
+                synced = 1;
+                fputc('\n', fifo);
+                continue;
+            }
             printf("%s failed (%3d)\n", flt[i].component, flt[i].severity);
             if (flt[i].component == NULL) {
                 fprintf(fifo, "power %d\n", flt[i].severity);

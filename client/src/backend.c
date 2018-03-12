@@ -29,7 +29,7 @@
 #include "backend_if.h"
 
 FILE *fifo = NULL;
-
+volatile int fifo_created = 1;
 volatile int lauSim_req_close_fd = 0;
 
 FILE *lauSim_get_fifo() {
@@ -38,7 +38,7 @@ FILE *lauSim_get_fifo() {
     mode_t old = umask(0);
     if (0 != mkfifo(FIFO_FILE, 0666)) {
         perror("mkfifo");
-        return NULL;
+        fifo_created = 0;
     }
     umask(old);
 
@@ -54,7 +54,7 @@ FILE *lauSim_get_fifo() {
 }
 
 void lauSim_fifo_cleanup() {
-    if (fifo != NULL) {
+    if (fifo_created && fifo != NULL) {
         fclose(fifo);
         unlink(FIFO_FILE);
     }
@@ -64,23 +64,31 @@ void lauSim_backend_cleanup() {
     lauSim_fifo_cleanup();
 }
 
-int lauSim_main(int argc, char **argv) {
+int lauSim_init(int argc, char **argv) {
+    fifo = lauSim_get_fifo();
+    fgetc(fifo);
+    /**
+     * the lausim backend init function is expected to call lauSim main.
+     * this gives the opportunity to create a new thread for lauSim main
+     * (required by the preload library)
+     */
+    if (lauSim_backend_init () != 0)
+        return EXIT_FAILURE;
+    return 0;
+}
+
+int lauSim_main() {
     size_t size = 0;
     char *line = NULL, *cmd_str, *opt_str;
     unsigned long opt, cmd;
-    FILE *fifo;
     int fifo_fd;
     fd_set fds;
     
-    if (lauSim_init () != 0)
-        return EXIT_FAILURE;
-    
-    fifo = lauSim_get_fifo();
+    fifo_fd = fileno(fifo);
     if (fifo == NULL) {
         perror("fdopen");
         return EXIT_FAILURE;
     }
-    fifo_fd = fileno(fifo);
 
     while(1) {
         FD_ZERO(&fds);

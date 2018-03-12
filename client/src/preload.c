@@ -37,6 +37,7 @@ unsigned lauSim_num_fds = 0;
 struct {
     int req_close_fds[2];
     int (*socket) (int domain, int type, int protocol);
+    int (*accept) (int socket, struct sockaddr *restrict address, socklen_t *restrict address_len);
     int (*close) (int fd);
 } lauSim_hooks;
 
@@ -108,33 +109,67 @@ void *lauSim_resolve(const char *fun) {
 }
 
 void *lauSim_run_main(void *ign) {
-    exit(lauSim_main(0, NULL));
+    exit(lauSim_main());
     return NULL;
 }
 
-int socket(int domain, int type, int protocol) {
-    int ret = lauSim_hooks.socket(domain, type, protocol);
-    fprintf(stderr, "opened socket: %d\n", ret);
+int add_sock_to_list(int sock) {
+    if (sock < 0)
+        return 1;
     pthread_mutex_lock(&lauSim_fds_mutex);
-    if (ret >= 0 && (domain == AF_INET || domain == AF_INET6)) {
-        lauSim_sock_fds = realloc(lauSim_sock_fds, ++lauSim_num_fds);
-        lauSim_sock_fds[lauSim_num_fds - 1] = ret;
+    lauSim_sock_fds = realloc(lauSim_sock_fds, ++lauSim_num_fds);
+    lauSim_sock_fds[lauSim_num_fds - 1] = sock;
+    pthread_mutex_unlock(&lauSim_fds_mutex);
+    return 0;
+}
+
+int is_in_list(int sock) {
+    unsigned i;
+    pthread_mutex_lock(&lauSim_fds_mutex);
+    for (i = 0; i < lauSim_num_fds; ++i) {
+        if (lauSim_sock_fds[i] == sock)
+            break;
+    }
+    pthread_mutex_unlock(&lauSim_fds_mutex);
+    return i < lauSim_num_fds;
+}
+
+int remove_sock_from_list(int sock) {
+    unsigned i;
+    int ret = 1;
+    pthread_mutex_lock(&lauSim_fds_mutex);
+    for (i = 0; i < lauSim_num_fds; ++i) {
+        if (lauSim_sock_fds[i] == sock) {
+            memmove(&lauSim_sock_fds[i], &lauSim_sock_fds[i + 1], sizeof(int) * (--lauSim_num_fds - i));
+            ret = 0;
+            break;
+        }
     }
     pthread_mutex_unlock(&lauSim_fds_mutex);
     return ret;
 }
 
-int close(int fd) {
-    unsigned i;
-    pthread_mutex_lock(&lauSim_fds_mutex);
-    for (i = 0; i < lauSim_num_fds; ++i) {
-        if (lauSim_sock_fds[i] == fd) {
-            memmove(&lauSim_sock_fds[i], &lauSim_sock_fds[i + 1], sizeof(int) * (--lauSim_num_fds - i));
-            break;
-        }
+int accept (int socket, struct sockaddr *restrict address, socklen_t *restrict address_len) {
+    int ret = lauSim_hooks.accept(socket, address, address_len);
+    if (is_in_list(socket)) {
+        if (add_sock_to_list(ret) == 0)
+            fprintf(stderr, "accepted socket: %d\n", ret);
     }
-    pthread_mutex_unlock(&lauSim_fds_mutex);
-    fprintf(stderr, "closed fd: %d\n", fd);
+    return ret;
+}
+
+int socket (int domain, int type, int protocol) {
+    int ret = lauSim_hooks.socket(domain, type, protocol);
+    if (domain == AF_INET || domain == AF_INET6) {
+        if (add_sock_to_list(ret) == 0)
+            fprintf(stderr, "opened socket: %d\n", ret);
+    }
+    return ret;
+}
+
+int close(int fd) {
+    if (remove_sock_from_list(fd) == 0)
+        fprintf(stderr, "closed socket: %d\n", fd);
     return lauSim_hooks.close(fd);
 }
 
@@ -149,12 +184,14 @@ int __attribute__((constructor)) init_hooks() {
     lauSim_req_close_fd = lauSim_hooks.req_close_fds[0];
     lauSim_hooks.socket = lauSim_resolve("socket");
     lauSim_hooks.close = lauSim_resolve("close");
+    lauSim_hooks.accept = lauSim_resolve("accept");
     lauSim_hook_is_init = 1;
-    pthread_create(&lauSim_thr, NULL, lauSim_run_main, NULL);
+    lauSim_init(0, NULL);
     return 0;
 }
 
-int lauSim_init() {
+int lauSim_backend_init() {
+    pthread_create(&lauSim_thr, NULL, lauSim_run_main, NULL);
     return 0;
 }
 
