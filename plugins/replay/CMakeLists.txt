@@ -1,4 +1,4 @@
-# Copyright 2017 Clemens Jonischkeit
+# Copyright 2018 Clemens Jonischkeit
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory(echo)
-add_subdirectory(random)
-add_subdirectory(mosquitto)
-add_subdirectory(transcribe)
-add_subdirectory(filelogger)
-add_subdirectory(replay)
+include_directories("${PROJECT_SOURCE_DIR}/include")
+add_library(replay SHARED "replay.c")
+
+add_dependencies(replay lauSim)

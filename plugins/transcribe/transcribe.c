@@ -30,13 +30,18 @@ const plugin_manager_interface *plug_man;
 fault_manager *nested;
 
 int get_nodes(size_t *num_nodes, node ***lau_nodes) {
-    size_t i;
+    size_t i, j;
     int ret = nested->get_nodes(num_nodes, lau_nodes);
 
     if (ret == 0) {
-        fprintf("%d\n", *num_nodes);
-        for (i = 0; i < *num_nodes; i++)
-            fprintf(file, "%s\n", (*lau_nodes)[i]->name);
+        fprintf(file, "%zu\n", *num_nodes);
+        for (i = 0; i < *num_nodes; i++) {
+            fprintf(file, "%s,%u", (*lau_nodes)[i]->name
+                                 , (*lau_nodes)[i]->num_components);
+            for (j = 0; j < (*lau_nodes)[i]->num_components; j++)
+                fprintf(file, ",%s", (*lau_nodes)[i]->components[j]->name);
+            fputc('\n', file);
+        }
     }
     return ret;
 }
