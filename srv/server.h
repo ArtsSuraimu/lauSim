@@ -29,7 +29,7 @@ public:
     void skip_to_end_of_tic();
     /**
      * pulls messages from the Backchannel (synchronous mode)
-     * @param a pointer populated by this function with the messages
+     * @param msgs a pointer populated by this function with the messages
      * @return the number of messages
      */
     size_t get_messages(Backchannel ***msgs);
@@ -66,6 +66,9 @@ public:
      * @return true if all nodes are ready, false if any node is not
      */
     bool all_nodes_ready();
+    /**
+     * Starts the exection on all attached nodes
+     */
     void send_synced_signal();
     void cleanup();
 private:

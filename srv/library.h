@@ -66,8 +66,17 @@ public:
      */
     char **argv;
 protected:
+    /**
+     * stores the initialization state. True if the library was initialized
+     */
     bool is_init = false;
+    /**
+     * holds the name of the library
+     */
     std::string name;
+    /**
+     * holds the handle from dlopen
+     */
     void * handle;
 };
 

@@ -57,6 +57,9 @@ typedef struct tag_fault{
     unsigned severity;
 } fault;
 
+/**
+ * This struct describes the interface used by the server to communicate with a fault manager
+ */
 typedef struct tag_fault_manager{
 	/**
 	  For storing the current fault manager version

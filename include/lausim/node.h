@@ -40,6 +40,9 @@ typedef enum tag_type{
 	pdu
 } node_type_t;
 
+/**
+ * This struct describes a component and its state
+ */
 typedef struct tag_component{
     /**
      * name of the component
@@ -51,6 +54,10 @@ typedef struct tag_component{
     unsigned severity;
 } component;
 
+/**
+ * This struct holds information about each node required by the server and the fault manager
+ * The fault manager may use a struct derived from this one
+ */
 typedef struct {
     /**
      * name of the node

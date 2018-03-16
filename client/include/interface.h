@@ -48,6 +48,7 @@ struct mqtt_opt{
  * initializes the communication backend
  * 
  * @param name the name of the node
+ * @param opt a struct depending on the actual backend used
  * @return 0 if successfull, 1 if not
  */
 int init(const char *name, void *opt);

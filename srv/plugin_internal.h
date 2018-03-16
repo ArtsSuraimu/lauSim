@@ -55,7 +55,7 @@ public:
      * @param argv the arguments provided to the init functions
      * @return 0 on success
      */
-    int load_library(char *file, int argc, char **opts);
+    int load_library(char *file, int argc, char **argv);
     /**
      * This function registers a plugin in the plugin manager. It is typically called
      * by the init function of a dynamic library containing the plugin to be registered.
@@ -63,7 +63,7 @@ public:
      * and a second stage initialization should be done in these cases using the post init function
      * of the plugin
      * 
-     * @param the plugin to be registerd
+     * @param p the plugin to be registerd
      * @return 0 on success
      */
     int register_plugin(plugin *p);
@@ -94,6 +94,7 @@ public:
      * The first plugin, that is used in ALL these roles is returned
      * 
      * @param p pointer to the plugin struct
+     * @param new_role the roles that plugin is now additionally used in
      * @return 0 on success
      */
     int add_role(plugin *p, plugin_type_t new_role);
@@ -102,6 +103,7 @@ public:
      * else the call will faile
      * 
      * @param p pointer to the plugin struct
+     * @param new_role The roles the plugin is now exclusively used in
      * @return 0 on sucess
      */
     int set_role(plugin *p, plugin_type_t new_role);

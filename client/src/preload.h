@@ -7,6 +7,9 @@
 #include <backend_if.h>
 #include <backend.h>
 
+/**
+ * This struct holds the current state of the backend
+ */
 struct lauSim_state_struct {
     /**
      * current state of the network. A transition in both directions is possible
@@ -42,6 +45,9 @@ struct lauSim_state_struct {
     int req_close_fds[2];
 };
 
+/**
+ * This struct is used to hold the addresses of the libc functions shadowed by this library
+ */
 struct lauSim_hooks_struct{
     /**
      * The original libc function for socket, as the symbol is shadowed

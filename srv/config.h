@@ -54,7 +54,7 @@ public:
      * load the configuration from a configuration file
      * 
      * @param filename Name of the file holding the configuration
-     * @retrun 0 on success
+     * @return 0 on success
      */
     int load_config(const char * filename);
     void cleanup();

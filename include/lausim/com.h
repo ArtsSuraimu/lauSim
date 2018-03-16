@@ -38,6 +38,9 @@ extern "C" {
 #define COM_SYNC 1
 #define COM_ASYNC 2
 
+/**
+ * This struct describes the interface the server uses to interact with the communication backend
+ */
 typedef struct {
     /**
      * capabilities of the backchannel

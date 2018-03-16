@@ -33,6 +33,9 @@ extern "C" {
 typedef void (*set_log_level_fun) (log_level);
 typedef void (*lausim_log_fun)(log_level l, const char *msg);
 
+/**
+ * This struct describes the interface to a logger
+ */
 typedef struct tag_logger{
     /**
      * version of the logger
