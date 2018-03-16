@@ -19,8 +19,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "backend_if.h"
-#include "backend.h"
+#include <backend_if.h>
+#include <backend.h>
 
 int lauSim_caps = SUBSYS_NET;
 unsigned long net_status = 0;

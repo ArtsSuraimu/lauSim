@@ -41,16 +41,42 @@ typedef enum tag_type{
 } node_type_t;
 
 typedef struct tag_component{
+    /**
+     * name of the component
+     */
     char *name;
+    /**
+     * the fault state the component is in [0,100], 0 is nominal, 100 is complete failure
+     */
     unsigned severity;
 } component;
 
 typedef struct {
+    /**
+     * name of the node
+     */
     char *name;
+    /**
+     * id of the node
+     */
     int id;
+    /**
+     * type of the node
+     */
     node_type_t type;
+    /**
+     * the state of the client (not the fault state).
+     */
     unsigned state;
+    /**
+     * the number of components
+     */
     unsigned num_components;
+    /**
+     * a list of components. It is of kind *(components[1]), so
+     * the fault manager can easily derive a struct from component
+     * and not need to copy everything for the server
+     */
     component **components;
 } node;
 

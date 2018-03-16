@@ -49,31 +49,114 @@ extern "C" {
 #define SET_PL_TYPE(pl,t) ((pl).pl_type |= t)
 #define HAS_PL_TYPE(pl,t) ((pl).pl_type & t)
 
+/**
+ * This struct describes a plugin
+ */
 typedef struct tag_plugin{
+    /**
+     * the version of the plugin
+     */
     int version;
+    /**
+     * the type of the plugin, can be a composition of multiple basic types
+     * tpye    | meaning
+     * -------:|:----
+     * PL_NONE | -
+     * PL_COM_ACTOR | provides communictaion capabilities for the actors
+     * PL_COM_EXTERN | provides communication capabilityies for external applications
+     * PL_FAULT_MANAGER | provides a fault manager, that decides about the components and severities for faults
+     * PL_LOGGER | provides a logging capabilities
+     * PL_TOPOLOGY | works hand in hand with the fault manager
+     * PL_OTHER | fullfills some other role
+     */
     plugin_type_t pl_type;
+    /**
+     * name of the plugin
+     */
     char *name;
 
+    /**
+     * function called once all plugins have been initialized
+     */
     post_init_fun post_init;
+    /**
+     * cleanup function called before unloading the plugin
+     */
     cleanup_fun cleanup;
+    /**
+     * get the communicaton backend
+     */
     get_com_fun c;
+    /**
+     * get the fault manager
+     */
     get_fault_manager_fun fm;
+    /**
+     * get the logger
+     */
     get_logger_fun lf;
 } plugin;
 
+/**
+ * a struct that assosiates a plugin with a role it is used in
+ */
 typedef struct tag_pl_role{
+    /**
+     * the role it is used in
+     */
     plugin_type_t role;
+    /**
+     * the plugin
+     */
     plugin *pl;
 } pl_role;
 
+/**
+ * provides an interface to the plugin manager for plugins
+ */
 typedef struct {
+    /**
+     * version of the plugin manager
+     */
     int version;
-    int (*register_plugin) (plugin *);
+    /**
+     * called to register a plugin
+     * @param p the plugin to register
+     * @return 0 on success
+     */
+    int (*register_plugin) (plugin *p);
+    /**
+     * finds a plugin by its name
+     * @param name the name of the plugin to look for
+     * @return the plugin on success, else NULL
+     */
     plugin *(*by_name) (const char *name);
+    /**
+     * finds a plugin by the role it is used in. Multiple roles can be specified.
+     * The first plugin, that is used in ALL these roles is returned
+     */
     plugin *(*by_type) (plugin_type_t type);
+    /**
+     * get the logger used
+     */
     logger *(*get_logger) ();
+    /**
+     * get a list of all loaded plugins
+     * @param pl a pointer to a pointer that is populated by a plugin role association list
+     * @return the number of plugins
+     */
     unsigned (*all_plugins) (pl_role **pl);
+    /**
+     * sets the role a plugin is used in. This does not show the capabilities, but must be a
+     * subset of the capabilities
+     * @return 0 on success
+     */
     int (*set_role) (plugin *, plugin_type_t new_role);
+    /**
+     * adds a usage role to a plugin. Must be a subset of the plugins capabilities.
+     * @param new_role the role the plugin is now additionally used in
+     * @return 0 on success
+     */
     int (*add_role) (plugin *, plugin_type_t new_role);
 } plugin_manager_interface;
 

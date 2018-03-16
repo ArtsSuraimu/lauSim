@@ -36,7 +36,8 @@ namespace lauSim {
 #define plugin_manager_version 1
 
 /**
- * Handles initializing of and access to plugins
+ * This class manages the individual plugins. It is used to load and initialze them
+ * Lets you search for plugins and assigns roles to them.
  */ 
 class plugin_manager {
 public:
@@ -45,7 +46,9 @@ public:
      */
     static plugin_manager *get_instance();
     /**
-     * loads a library potentially containing plugins and calls its init function
+     * This function is used to load a library potentially containing plugins.
+     * After the shared object is loaded using the Library class, it's init methode
+     * is called with copies of the arguments provided to this funciton.
      * 
      * @param file The shared object to be loaded
      * @param argc the number of arguments provided to the init function
@@ -54,15 +57,19 @@ public:
      */
     int load_library(char *file, int argc, char **opts);
     /**
-     * registers a plugin
+     * This function registers a plugin in the plugin manager. It is typically called
+     * by the init function of a dynamic library containing the plugin to be registered.
+     * A plugin should be registered even if not all it's dependencies neccesarly are loaded
+     * and a second stage initialization should be done in these cases using the post init function
+     * of the plugin
      * 
-     * usually called by the init function of a shared object
      * @param the plugin to be registerd
      * @return 0 on success
      */
     int register_plugin(plugin *p);
     /**
      * retreive a plugin by name
+     * 
      * @return a pointer to the plugin struct on success or a nullptr
      */
     plugin * get_by_name(const char *name);
@@ -74,37 +81,41 @@ public:
      */
     plugin * get_by_type(plugin_type_t type);
     /**
-     * enumerates all loaded plugins with the role they are currently used in
+     * This function is called to enumerate all plugins that are loaded and registered in the plugin manager.
+     * For each plugin it also returns the role the plugin is used in. This role is always a subset of the
+     * capabilities the plugin has. A plugin only doing communications for example will never be listed as a logger.
      * 
-     * the role is always a subset of type of the plugin
      * @param pl pointer will be overwritten with a filled array of plugins with attached roles
      * @return the number of plugins
      */
     unsigned all_plugins(pl_role **pl);
     /**
-     * adds a role, a plugin is currently used in
+     * finds a plugin by the role it is used in. Multiple roles can be specified.
+     * The first plugin, that is used in ALL these roles is returned
+     * 
      * @param p pointer to the plugin struct
      * @return 0 on success
      */
     int add_role(plugin *p, plugin_type_t new_role);
     /**
-     * sets the role a plugin is currently used in
+     * sets the role a plugin is currently used in. It has to be a subset of the capabilities of the plugin
+     * else the call will faile
+     * 
      * @param p pointer to the plugin struct
      * @return 0 on sucess
      */
     int set_role(plugin *p, plugin_type_t new_role);
+
     /**
-     * unregisters a plugin
-     * @param name The name of the plugin
+     * destroys the plugin manager, calling the cleanup function of all plugins and unloading all libraries.
      */
-    int unregister_plugin(const char *name);
     void cleanup();
     /**
      * pointer to the logger used.
      */
     logger * logger_used;
     /**
-     * a mapping between plugins and the role they are used in
+     * Stores a mapping between plugins and the role they are used in
      */
     std::map<plugin*, plugin_type_t> plugins;
 private:

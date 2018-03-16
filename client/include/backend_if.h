@@ -14,9 +14,34 @@
    limitations under the License.
 */
 
+/** \file */
+
 #ifndef BACKEND_IF_H
 #define BACKEND_IF_H
 
+/**
+ * \def FIFO_FILE
+ * \brief A macro holding the file name of the fifo
+ * 
+ * This macro holds the file name of the fifo queue used to convey
+ * commands from the client, listening for commands from the server,
+ * to the backend interacting with the application.
+ * 
+ * \warning having a fixed path means that only one application may run at a time per host
+ */
+
+#define FIFO_FILE "/tmp/lauSim/backend"
+
+/**
+ * \enum en_subsys
+ * 
+ * This enum eneumerates the different types of subsystems that can be affected by a backend
+ * Name  | Effects
+ * ------|--------
+ * SUBSYS_NET | The Network subsystems. A fail can result in dropped messages, connections and closed sockets
+ * SUBSYS_MEM | The Memory subsystem. Fails can result in bitflips in memory.
+ * SUBSYS_PWR | Power subsystem. A fail usually forces the entire application to quit
+ */
 enum en_subsys {
     SUBSYS_NET = 1,
     SUBSYS_MEM = 2,
@@ -29,7 +54,8 @@ enum en_subsys {
 extern int lauSim_caps;
 
 /**
- * initializes the backend
+ * \fn lauSim_backend_init()
+ * This is called to initialize the backend
  * 
  * @return 0 on success
  */

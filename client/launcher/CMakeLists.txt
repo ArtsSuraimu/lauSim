@@ -14,11 +14,4 @@
 
 
 include_directories("${PROJECT_SOURCE_DIR}/client/include" ${ProtoIncludeDir})
-add_executable(client_mqtt "${PROJECT_SOURCE_DIR}/client/src/mqtt.c" "${PROJECT_SOURCE_DIR}/client/src/client.c")
-target_compile_definitions(client_mqtt PRIVATE -DCON=MQTT)
-TARGET_LINK_LIBRARIES(client_mqtt cprotocols mosquitto)
-
-add_executable(privileged "${PROJECT_SOURCE_DIR}/client/src/backend.c" "${PROJECT_SOURCE_DIR}/client/src/privileged.c")
-add_library(preload SHARED "${PROJECT_SOURCE_DIR}/client/src/backend.c" "${PROJECT_SOURCE_DIR}/client/src/preload.c")
-TARGET_LINK_LIBRARIES(preload pthread dl)
-add_subdirectory(launcher)
+add_executable(lancher "${PROJECT_SOURCE_DIR}/client/launcher/launcher.c")

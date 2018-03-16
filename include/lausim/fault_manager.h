@@ -30,12 +30,30 @@ namespace lauSim {
 extern "C" {
 #endif  //__cplusplus
 
+/**
+ * This struct represents a fault. It is filled by the fault manager with all details
+ * neccessary for the server to dispatch it.
+ */
 typedef struct tag_fault{
+    /**
+     * The id of the fault
+     */
     int id;
+    /**
+     * The name of the fault
+     */
     char *name;
+    /**
+     * The name of the component that failed
+     */
     char *component;
+    /**
+     * The name of the node the fault happend on
+     */
     char *node;
-    // how bad is the fault [0,100]
+    /**
+     * The severity of the fault
+     */
     unsigned severity;
 } fault;
 

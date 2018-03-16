@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <interface.h>
-#include <interface_backend.h>
+#include <backend_if.h>
 #include <backchannel.pb-c.h>
 
 volatile int req_stop = 0;

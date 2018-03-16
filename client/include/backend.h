@@ -14,6 +14,8 @@
    limitations under the License.
 */
 
+/** \file */
+
 #ifndef BACKEND_H
 #define BACKEND_H
 
@@ -23,6 +25,11 @@
  */
 extern volatile int lauSim_req_close_fd;
 
+/**
+ * initializes the part of the backend, that is not dependent on the
+ * methode used (like opening the fifo and stalling until the start
+ * signal is received)
+ */
 int lauSim_init(int argc, char **argv);
 
 /**

@@ -16,50 +16,46 @@
 
 #define _GNU_SOURCE
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
 #include <unistd.h>
-#include <pthread.h>
-#include <sys/socket.h>
-#include "backend_if.h"
-#include "backend.h"
+#include "preload.h"
 
 int lauSim_caps = SUBSYS_NET;
-unsigned long lauSim_net_status = 0;
-pthread_t lauSim_thr;
-int lauSim_hook_is_init = 0;
-pthread_mutex_t lauSim_fds_mutex = PTHREAD_MUTEX_INITIALIZER;
-int *lauSim_sock_fds = NULL;
-unsigned lauSim_num_fds = 0;
 
+struct lauSim_state_struct lauSim_state = {
+    .net_state = 0,
+    .is_init = 0,
+    .fds_mutex = PTHREAD_MUTEX_INITIALIZER,
+    .fds = NULL,
+    .num_fds = 0
+};
 
-struct {
-    int req_close_fds[2];
-    int (*socket) (int domain, int type, int protocol);
-    int (*accept) (int socket, struct sockaddr *restrict address, socklen_t *restrict address_len);
-    int (*close) (int fd);
-} lauSim_hooks;
+struct lauSim_hooks_struct lauSim_hooks = {
+    .socket = NULL,
+    .accept = NULL,
+    .close = NULL
+};
 
 int lauSim_switch_net(unsigned long severity) {
     unsigned i;
-    if (lauSim_net_status == 0 && severity != 0) {
+    if (lauSim_state.net_state == 0 && severity != 0) {
         // TODO disable network
         fputs("disabeling network connections\n", stderr);
-        pthread_mutex_lock(&lauSim_fds_mutex);
-        for (i = 0; i < lauSim_num_fds; i++) {
-            shutdown(lauSim_sock_fds[i], SHUT_RDWR);
+        pthread_mutex_lock(&lauSim_state.fds_mutex);
+        for (i = 0; i < lauSim_state.num_fds; i++) {
+            shutdown(lauSim_state.fds[i], SHUT_RDWR);
         }
-        free(lauSim_sock_fds);
-        lauSim_num_fds = 0;
-        pthread_mutex_unlock(&lauSim_fds_mutex);
-        lauSim_net_status = 1;
+        free(lauSim_state.fds);
+        lauSim_state.num_fds = 0;
+        pthread_mutex_unlock(&lauSim_state.fds_mutex);
+        lauSim_state.net_state = 1;
         return 0;
     }
 
-    if (lauSim_net_status != 0 && severity == 0) {
+    if (lauSim_state.net_state != 0 && severity == 0) {
         // TODO enable network
-        lauSim_net_status = 0;
+        lauSim_state.net_state = 0;
         return 0;
     }
 
@@ -116,36 +112,36 @@ void *lauSim_run_main(void *ign) {
 int add_sock_to_list(int sock) {
     if (sock < 0)
         return 1;
-    pthread_mutex_lock(&lauSim_fds_mutex);
-    lauSim_sock_fds = realloc(lauSim_sock_fds, ++lauSim_num_fds);
-    lauSim_sock_fds[lauSim_num_fds - 1] = sock;
-    pthread_mutex_unlock(&lauSim_fds_mutex);
+    pthread_mutex_lock(&lauSim_state.fds_mutex);
+    lauSim_state.fds = realloc(lauSim_state.fds, ++lauSim_state.num_fds);
+    lauSim_state.fds[lauSim_state.num_fds - 1] = sock;
+    pthread_mutex_unlock(&lauSim_state.fds_mutex);
     return 0;
 }
 
 int is_in_list(int sock) {
     unsigned i;
-    pthread_mutex_lock(&lauSim_fds_mutex);
-    for (i = 0; i < lauSim_num_fds; ++i) {
-        if (lauSim_sock_fds[i] == sock)
+    pthread_mutex_lock(&lauSim_state.fds_mutex);
+    for (i = 0; i < lauSim_state.num_fds; ++i) {
+        if (lauSim_state.fds[i] == sock)
             break;
     }
-    pthread_mutex_unlock(&lauSim_fds_mutex);
-    return i < lauSim_num_fds;
+    pthread_mutex_unlock(&lauSim_state.fds_mutex);
+    return i < lauSim_state.num_fds;
 }
 
 int remove_sock_from_list(int sock) {
     unsigned i;
     int ret = 1;
-    pthread_mutex_lock(&lauSim_fds_mutex);
-    for (i = 0; i < lauSim_num_fds; ++i) {
-        if (lauSim_sock_fds[i] == sock) {
-            memmove(&lauSim_sock_fds[i], &lauSim_sock_fds[i + 1], sizeof(int) * (--lauSim_num_fds - i));
+    pthread_mutex_lock(&lauSim_state.fds_mutex);
+    for (i = 0; i < lauSim_state.num_fds; ++i) {
+        if (lauSim_state.fds[i] == sock) {
+            memmove(&lauSim_state.fds[i], &lauSim_state.fds[i + 1], sizeof(int) * (--lauSim_state.num_fds - i));
             ret = 0;
             break;
         }
     }
-    pthread_mutex_unlock(&lauSim_fds_mutex);
+    pthread_mutex_unlock(&lauSim_state.fds_mutex);
     return ret;
 }
 
@@ -173,32 +169,32 @@ int close(int fd) {
     return lauSim_hooks.close(fd);
 }
 
-int __attribute__((constructor)) init_hooks() {
-    if (lauSim_hook_is_init)
+int init_hooks() {
+    if (lauSim_state.is_init)
         return 0;
     
-    if (pipe(lauSim_hooks.req_close_fds) < 0) {
+    if (pipe(lauSim_state.req_close_fds) < 0) {
         perror("pipe");
         return 1;
     }
-    lauSim_req_close_fd = lauSim_hooks.req_close_fds[0];
+    lauSim_req_close_fd = lauSim_state.req_close_fds[0];
     lauSim_hooks.socket = lauSim_resolve("socket");
     lauSim_hooks.close = lauSim_resolve("close");
     lauSim_hooks.accept = lauSim_resolve("accept");
-    lauSim_hook_is_init = 1;
+    lauSim_state.is_init = 1;
     lauSim_init(0, NULL);
     return 0;
 }
 
 int lauSim_backend_init() {
-    pthread_create(&lauSim_thr, NULL, lauSim_run_main, NULL);
+    pthread_create(&lauSim_state.thr, NULL, lauSim_run_main, NULL);
     return 0;
 }
 
 int __attribute__((destructor)) lauSim_hook_cleanup() {
-    write(lauSim_hooks.req_close_fds[1], "X", 1);
-    pthread_join(lauSim_thr, NULL);
-    lauSim_hooks.close(lauSim_hooks.req_close_fds[0]);
-    lauSim_hooks.close(lauSim_hooks.req_close_fds[0]);
+    write(lauSim_state.req_close_fds[1], "X", 1);
+    pthread_join(lauSim_state.thr, NULL);
+    lauSim_hooks.close(lauSim_state.req_close_fds[0]);
+    lauSim_hooks.close(lauSim_state.req_close_fds[0]);
     return 0;
 }

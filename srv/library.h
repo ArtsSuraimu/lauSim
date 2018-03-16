@@ -28,7 +28,10 @@
 namespace lauSim {
 
 /**
- * used to load plugins and keep them in memory
+ * This class is used to load and hold libraries containing plugins. It is also
+ * used to resolve the mandatory init function and to keep a copy of the arguments for that
+ * function. Storing the arguments over the lifetime of the library is neccessary to support a "main like"
+ * semantic and enables the library to use references to the argument vector
  */
 class library {
 public:
@@ -39,14 +42,16 @@ public:
     library& operator=(library&) = delete;
     
     /**
-     * opens a plugin (shared object file)
-     * 
-     * for each plugin a new symbol namespace is created resulting in libraries (like libc) beeing loaded multiple times
+     * Plugins are stored in dynamic libraries (shared object files). This function loads such
+     * file into memory using a dynamic library loader (dlmopen). For each library a new namespace
+     * is created. This prevents symbols from one library shadowing symbols from a different library.
+     * Each library can contain multiple plugins.
      */
     int open(const char *filename);
 
     /**
-     * resolves a symbol defined by this plugin
+     * Thsi function seloves a symbol exposed by the loaded library by its name. This is used to find
+     * initialization routines and other functions.
      */
     void *get_sym_addr(const char *symname);
     ~library();
@@ -56,8 +61,8 @@ public:
     int argc;
     /**
      * stores the argument vector supplyied to the library
-     * The keeps the vector valid during the lifetime of the plugin and also
-     * enables freeing these resources
+     * The keeps the vector valid during the lifetime of the library and also
+     * enables freeing these resources upon unloading the library
      */
     char **argv;
 protected:

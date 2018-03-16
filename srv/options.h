@@ -25,36 +25,44 @@
 namespace lauSim {
 
 /**
- * Handles options passed to the program
+ * This class parses and stores options passed to the program via command line.
  */
 class Options {
 public:
     Options(): cfile(""), loglevel(LL_Warning), sync(false), max_tics(0) {}
 
     /**
-     * parse command line options (usually the ones supplyied to main)
+     * This function parses command line options (usually the ones supplyied to main)
      * @param argc The length of the argument vector
      * @param argv The argument vector
      */
     int parse(int argc, char ** argv);
 
     /**
-     * the config file used
+     * Holds the name of the configuration file that should be used.
      */
     std::string cfile;
+
     /**
-     * minimum log level
+     * Holds the minimum log level. Any message with a log level at least as high
+     * shall be logged and any message with a lower level shall be discarded.
      */
     log_level loglevel;
+
     /**
-     * waiting for all nodes to be ready
-     * true: wait
-     * false: no wait
+     * Indicates weather to wait for all nodes to become ready. This sould be set for normal operation
+     * but unset if you want to record a run without interaction with actual actors.
+     * Value | Semantic
+     * ---:|:---
+     * true (!= 0)  | wait until all nodes have reported that they are ready
+     * false (== 0) | do not wait for any ready messages
      */
     bool sync;
     /**
-     * automatically shut down the server after some number of tics
-     * 0 means unlimited tic count
+     * This denotes an upper limit for the number of server tics for this run.
+     * Once the tic counter exceeds max_tics the server will shutdown. This is especially
+     * usefull when a run is recorded and the server does not wait between tics.
+     * Setting this value to 0 is equivalent to not setting an upper limit.
      */
     unsigned max_tics;
 };

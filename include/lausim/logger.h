@@ -34,8 +34,20 @@ typedef void (*set_log_level_fun) (log_level);
 typedef void (*lausim_log_fun)(log_level l, const char *msg);
 
 typedef struct tag_logger{
+    /**
+     * version of the logger
+     */
     int version;
+    /**
+     * function to set the log level. Only messages with a log level at least
+     * as high as the set log level shall be logged
+     */
     set_log_level_fun set_ll;
+    /**
+     * logging function
+     * @param l the log level of the message
+     * @param msg the message to be logged
+     */
     lausim_log_fun log_fun;
 } logger;
 

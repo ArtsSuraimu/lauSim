@@ -9,6 +9,11 @@
 
 namespace lauSim {
 
+/**
+ * This class implements the server. The Server coordinates the different plugins
+ * and querries the fault manager for the current faults and forwards these fault to
+ * the appropriate communication plugins.
+ */
 class Server {
 public:
     static Server *get_instance();
@@ -65,18 +70,47 @@ public:
     void cleanup();
 private:
     Server() = default;
+    /**
+     * the type of the backchannel used
+     */
     unsigned backchannel_type;
+    /**
+     * coordinates access (to|of) the backchannel
+     */
     std::mutex backchannel_mutex;
+    /**
+     * a buffer of messages from the backchannel. It can be used to temporarly
+     * hold messages from an asynchronous backchannel for a synchronous fault manager
+     */
     std::vector<Backchannel> messages;
-    size_t num_msg;
+    /**
+     * the current tic number
+     */
     uint64_t tic;
+    // gives easy access to different parts of the server
     Config *conf;
     plugin_manager *plugins;
     fault_manager *manager;
     com *com_actor;
     com *com_notify;
+    /**
+     * the number of nodes exposed by the fault manager to the server
+     * e.g. the nodes that have actors attached to it. A PDU may be represented
+     * by the fault manager, but not by a node, therefore it may be private to
+     * the fault_manager
+     */
     size_t num_nodes;
+    /**
+     * an array of nodes. The type is designed so that the fault manager can easily derive
+     * a struct from node and not need to create a copy of all notes for the server.
+     * access to node "i" is like "nodes[i]->attribute". The type is (nodes *(node[1]))
+     */
     node **nodes;
+    /**
+     * If the backend is asynchronous, a callback is registered in the com interface. However only one callback
+     * is stored at a time. Therefore this varaible stores the address of an eventually previously registered
+     * callback, so that messages can be forwarded to other parts of the backend (e.g. fault manager)
+     */
     msg_callback other_cb = nullptr;
 };
 

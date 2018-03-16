@@ -25,8 +25,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <interface_backend.h>
-#include "backend_if.h"
+#include <backend_if.h>
 
 FILE *fifo = NULL;
 volatile int fifo_created = 1;
@@ -66,7 +65,8 @@ void lauSim_backend_cleanup() {
 
 int lauSim_init(int argc, char **argv) {
     fifo = lauSim_get_fifo();
-    fgetc(fifo);
+    if (fifo_created)
+        fgetc(fifo);
     /**
      * the lausim backend init function is expected to call lauSim main.
      * this gives the opportunity to create a new thread for lauSim main

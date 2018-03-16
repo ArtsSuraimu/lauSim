@@ -14,6 +14,8 @@
    limitations under the License.
 */
 
+/** \file */
+
 #ifndef INTERFACE_H
 #define INTERFACE_H
 

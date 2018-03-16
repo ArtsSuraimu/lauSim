@@ -14,7 +14,7 @@
 
 [libs]
 ./plugins/echo/libecho.so --arg1 -h
-./plugins/random/librandom.so 5
+./plugins/random/librandom.so 1
 ./plugins/mosquitto/libcom_mqtt.so lauSim_Host localhost
 ./plugins/filelogger/libfilelogger.so log.txt
 
